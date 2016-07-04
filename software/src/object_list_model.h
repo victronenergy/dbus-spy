@@ -54,6 +54,8 @@ private slots:
 
 	void onChildRemoved(VeQItem *item);
 
+	void onItemStateChanged(VeQItem *item);
+
 private:
 	void startScan();
 

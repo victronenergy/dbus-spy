@@ -2,6 +2,7 @@
 #define APPLICATION_H
 
 #include <QCoreApplication>
+#include <QSet>
 
 class ListView;
 class ObjectsScreen;
@@ -28,11 +29,14 @@ private slots:
 
 	void onDBusItemAdded(VeQItem *item);
 
+	void onStateChanged(VeQItem *item);
+
 private:
 	QTimer *mTimer;
 	VeQItem *mRoot;
 	ServicesScreen *mServices;
 	ObjectsScreen *mObjects;
+	QSet<QString> mIncompatibleServices;
 };
 
 #endif // APPLICATION_H

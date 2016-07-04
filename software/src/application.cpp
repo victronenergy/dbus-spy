@@ -52,7 +52,8 @@ int Application::init()
 		VeQItem *item = mRoot->itemChild(i);
 		if (item == 0)
 			break;
-		onDBusItemAdded(item);
+		connect(item, SIGNAL(stateChanged(VeQItem *, State)),
+				this, SLOT(onStateChanged(VeQItem *)));
 	}
 	connect(mRoot, SIGNAL(childAdded(VeQItem *)), this, SLOT(onDBusItemAdded(VeQItem *)));
 
@@ -124,8 +125,29 @@ void Application::onServiceSelected(VeQItem *serviceRoot)
 
 void Application::onDBusItemAdded(VeQItem *item)
 {
-	if (item->uniqueId().contains("com.victronenergy.settings")) {
-		connect(item, SIGNAL(childAdded(VeQItem *)), this, SLOT(onDBusItemAdded(VeQItem *)));
-		static_cast<VeQItemDbus *>(item)->introspect();
+	VeQItem *child = item;
+	for (;;) {
+		VeQItem *parent = child->itemParent();
+		if (parent == 0)
+			return;
+		if (parent == mRoot)
+			break;
+		child = parent;
 	}
+	if (!mIncompatibleServices.contains(child->id()))
+		return;
+	if (item->isLeaf())
+		item->getValue();
+	connect(item, SIGNAL(childAdded(VeQItem *)), this, SLOT(onDBusItemAdded(VeQItem *)));
+	static_cast<VeQItemDbus *>(item)->introspect();
+}
+
+void Application::onStateChanged(VeQItem *item)
+{
+	Q_ASSERT(item->itemParent() == mRoot);
+	if (item->getState() != VeQItem::Offline || item->itemChild(0) != 0)
+		return;
+	mIncompatibleServices.insert(item->id());
+	onDBusItemAdded(item);
+	item->produceValue(QVariant(), VeQItem::Synchronized);
 }

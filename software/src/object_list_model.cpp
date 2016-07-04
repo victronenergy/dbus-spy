@@ -106,6 +106,14 @@ void ObjectListModel::onChildRemoved(VeQItem *item)
 	updateFilteredList();
 }
 
+void ObjectListModel::onItemStateChanged(VeQItem *item)
+{
+	if (item->getState() == VeQItem::Requested)
+		return;
+	if ((item->getState() == VeQItem::Offline) == mFilteredObjects.contains(item))
+		updateFilteredList();
+}
+
 void ObjectListModel::updateRoot()
 {
 	updateFilteredList();
@@ -120,6 +128,9 @@ void ObjectListModel::updateRoot()
 void ObjectListModel::updateFilteredList()
 {
 	if (!mFilteredObjects.isEmpty()) {
+		foreach (VeQItem *item, mFilteredObjects) {
+			disconnect(item);
+		}
 		beginRemoveRows(QModelIndex(), 0, mFilteredObjects.size() - 1);
 		mFilteredObjects.clear();
 		endRemoveRows();
@@ -128,6 +139,10 @@ void ObjectListModel::updateFilteredList()
 	if (mRoot != 0)
 		updateFilteredList(mRoot, items);
 	if (!items.isEmpty()) {
+		foreach (VeQItem *item, items) {
+			connect(item, SIGNAL(stateChanged(VeQItem *, State)),
+					this, SLOT(onItemStateChanged(VeQItem *)));
+		}
 		beginInsertRows(QModelIndex(), 0, items.size() - 1);
 		mFilteredObjects = items;
 		endInsertRows();
@@ -141,8 +156,11 @@ void ObjectListModel::updateFilteredList(VeQItem *root, QList<VeQItem *> &items)
 		if (item == 0)
 			break;
 		if (!mRecursive || item->isLeaf()) {
-			if (mFilterText.isEmpty() || item->uniqueId().contains(mFilterText))
+			if (item->getState() != VeQItem::Offline && (
+					mFilterText.isEmpty() || item->uniqueId().contains(mFilterText)))
+			{
 				items.append(item);
+			}
 		} else {
 			updateFilteredList(item, items);
 		}
