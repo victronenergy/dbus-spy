@@ -117,11 +117,23 @@ void ObjectListModel::onItemStateChanged(VeQItem *item)
 void ObjectListModel::updateRoot()
 {
 	updateFilteredList();
-	if (mRoot != 0) {
-		connect(mRoot, SIGNAL(childAdded(VeQItem *)),
-				this, SLOT(onChildAdded(VeQItem *)));
-		connect(mRoot, SIGNAL(childAboutToBeRemoved(VeQItem *)),
-				this, SLOT(onChildRemoved(VeQItem *)));
+	if (mRoot != 0)
+		connectItem(mRoot);
+}
+
+void ObjectListModel::connectItem(VeQItem *item)
+{
+	connect(item, SIGNAL(childAdded(VeQItem *)),
+			this, SLOT(onChildAdded(VeQItem *)));
+	connect(item, SIGNAL(childAboutToBeRemoved(VeQItem *)),
+			this, SLOT(onChildRemoved(VeQItem *)));
+	if (!mRecursive)
+		return;
+	for (int i=0;; ++i) {
+		VeQItem *c = item->itemChild(i);
+		if (c == 0)
+			break;
+		connectItem(c);
 	}
 }
 
@@ -129,7 +141,7 @@ void ObjectListModel::updateFilteredList()
 {
 	if (!mFilteredObjects.isEmpty()) {
 		foreach (VeQItem *item, mFilteredObjects) {
-			disconnect(item);
+			disconnect(item, SIGNAL(stateChanged(VeQItem *, State)));
 		}
 		beginRemoveRows(QModelIndex(), 0, mFilteredObjects.size() - 1);
 		mFilteredObjects.clear();

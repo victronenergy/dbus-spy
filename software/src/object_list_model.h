@@ -61,6 +61,8 @@ private:
 
 	void updateRoot();
 
+	void connectItem(VeQItem *item);
+
 	void updateFilteredList();
 
 	void updateFilteredList(VeQItem *root, QList<VeQItem *> &items);
