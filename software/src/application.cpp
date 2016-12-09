@@ -15,7 +15,8 @@ Application::Application(int &argc, char **argv):
 	mTimer(0),
 	mRoot(0),
 	mServices(0),
-	mObjects(0)
+	mObjects(0),
+	mUseIntrospect(false)
 {
 	QCoreApplication::setApplicationVersion(VERSION);
 }
@@ -32,6 +33,7 @@ int Application::init()
 	args.addArg("--dbus", "dbus address (session, system, ...)");
 	args.addArg("-v --version", "Show version");
 	args.addArg("-h --help", "Show help");
+	args.addArg("-i --introspect", "Use introspect to build a tree of the pesky services support GetValue on the root");
 	if (args.contains("h") || args.contains("help")) {
 		args.help();
 		return -1;
@@ -40,6 +42,8 @@ int Application::init()
 		args.version();
 		return -1;
 	}
+	mUseIntrospect = args.contains("i") || args.contains("introspect");
+
 	QString dbusAddress = args.contains("dbus") ? args.value("dbus") : "system";
 
 	VeQItemDbusProducer *producer = new VeQItemDbusProducer(VeQItems::getRoot(), "dbus", true, true, this);
@@ -134,7 +138,7 @@ void Application::onDBusItemAdded(VeQItem *item)
 			break;
 		child = parent;
 	}
-	if (!mIncompatibleServices.contains(child->id()))
+	if (!mUseIntrospect || !mIncompatibleServices.contains(child->id()))
 		return;
 	if (item->isLeaf())
 		item->getValue();

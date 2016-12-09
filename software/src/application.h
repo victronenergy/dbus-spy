@@ -37,6 +37,7 @@ private:
 	ServicesScreen *mServices;
 	ObjectsScreen *mObjects;
 	QSet<QString> mIncompatibleServices;
+	bool mUseIntrospect;
 };
 
 #endif // APPLICATION_H
