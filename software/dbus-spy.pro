@@ -64,3 +64,6 @@ HEADERS += \
     src/signal_handler.h \
     src/arguments.h \
     velib/velib_config_app.h
+
+DISTFILES += \
+    ../README.md
