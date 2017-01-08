@@ -1,7 +1,7 @@
 # dbus-spy
 
 dbus-spy is a debug tool intended for the Venus embedded Linux platform created by
-[Victron Energy](victronenergy.com).
+[Victron Energy](http://victronenergy.com).
 This is the platform running on the CCGX display units. This application provides a realtime view
 on all properties published to the D-Bus. It is also possible to change the values of those
 properties (whenever the application publishing the property allows it).
@@ -29,7 +29,7 @@ dbus-spy relies on several external libraries:
   as open source. Please contact Victron Energy if you need it.
 
 You will also need the
-[venus SDK](https://help.github.com/articles/basic-writing-and-formatting-syntax). As of this moment
+[venus SDK](https://www.victronenergy.com/live/open_source:ccgx:setup_development_environment). As of this moment
 you need to use version 1.40.
 
 ## Some ceveats
