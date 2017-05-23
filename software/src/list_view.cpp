@@ -111,7 +111,9 @@ void ListView::redraw()
 	int endIndex = qMin(mModel->rowCount(), h + mStartIndex);
 	for (int r = mStartIndex; r < endIndex; ++r)
 		_redrawRow(r);
-	wclrtobot(mWindow);
+	int y = endIndex - mStartIndex;
+	if (y < h)
+		wclrtobot(mWindow);
 }
 
 void ListView::redrawRows(int startIndex, int endIndex)
