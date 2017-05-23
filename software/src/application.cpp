@@ -10,6 +10,71 @@
 #include "objects_screen.h"
 #include "services_screen.h"
 
+/// This class will adapt a VeQItem and adjust its setValue class to make sure we always get out
+/// of the Storing state.
+template <typename BaseClass>
+class NoStorageQItem: public BaseClass
+{
+public:
+	using BaseClass::BaseClass;
+
+	virtual int setValue(QVariant const &value)
+	{
+		int i = setValue(value);
+		if (i != 0)
+			return i;
+		BaseClass::setState(VeQItem::Synchronized);
+		return 0;
+	}
+};
+
+/// This class allows you to take any class inheriting VeQItemProducer, and force it to create a
+/// custom VeQItem. This item should inherit the item created by the VeQItemProducer specified
+/// in BaseClass. If you do not do that, the producer may get confused.
+template <typename BaseClass, typename Item>
+class CustomQItemProducer: public BaseClass
+{
+public:
+	using BaseClass::BaseClass;
+
+	virtual VeQItem *createItem()
+	{
+		return new Item(this);
+	}
+};
+
+//class NoStorageQItem: public VeQItemDbus
+//{
+//public:
+//	NoStorageQItem(VeQItemDbusProducer *producer):
+//		VeQItemDbus(producer)
+//	{}
+
+//	virtual int setValue(QVariant const &value)
+//	{
+//		int i = setValue(value);
+//		if (i != 0)
+//			return i;
+//		setState(VeQItem::Synchronized);
+//		return 0;
+//	}
+//};
+
+//class NoStorageQItemProducer: public VeQItemDbusProducer
+//{
+//public:
+//	NoStorageQItemProducer(VeQItem *root, QString id, bool findVictronServices = true,
+//		bool bulkInitOfNewService = true, QObject *parent = 0):
+//		VeQItemDbusProducer(root, id, findVictronServices, bulkInitOfNewService, parent)
+//	{}
+
+
+//	virtual VeQItem *createItem()
+//	{
+//		return new NoStorageQItem(this);
+//	}
+//};
+
 Application::Application(int &argc, char **argv):
 	QCoreApplication(argc, argv),
 	mTimer(0),
@@ -46,7 +111,7 @@ int Application::init()
 
 	QString dbusAddress = args.contains("dbus") ? args.value("dbus") : "system";
 
-	VeQItemDbusProducer *producer = new VeQItemDbusProducer(VeQItems::getRoot(), "dbus", true, true, this);
+	VeQItemDbusProducer *producer = new CustomQItemProducer<VeQItemDbusProducer, VeQItemDbus>(VeQItems::getRoot(), "dbus", true, true, this);
 	producer->open(dbusAddress);
 	mRoot = producer->services();
 	// We need som extra code here to catch the com.victronenergy.settings service, because it does
