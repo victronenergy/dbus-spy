@@ -1,13 +1,18 @@
 #include <QAbstractItemModel>
+#include <QTimer>
 #include "list_view.h"
 
 ListView::ListView(WINDOW *w, QObject *parent):
 	QObject(parent),
 	mWindow(w),
 	mModel(0),
+	mRedrawTimer(new QTimer(this)),
 	mStartIndex(0),
 	mSelectionIndex(0)
 {
+	mRedrawTimer->setInterval(100);
+	mRedrawTimer->setSingleShot(true);
+	connect(mRedrawTimer, SIGNAL(timeout()), this, SLOT(onRedrawAll()));
 }
 
 QAbstractItemModel *ListView::model() const
@@ -23,19 +28,14 @@ void ListView::setModel(QAbstractItemModel *m)
 	connect(mModel, SIGNAL(dataChanged(QModelIndex, QModelIndex)),
 			this, SLOT(onDataChanged(QModelIndex, QModelIndex)));
 	connect(mModel, SIGNAL(layoutChanged()),
-			this, SLOT(onLayoutChanged()));
-//	connect(mModel, SIGNAL(layoutAboutToBeChanged()),
-//			this, SLOT(onLayoutAboutToBeChanged()));
+			this, SLOT(onScheduleRedrawAll()));
 	connect(mModel, SIGNAL(rowsInserted(QModelIndex, int, int)),
-			this, SLOT(onRowsInserted(QModelIndex, int, int)));
+			this, SLOT(onScheduleRedrawAll()));
 	connect(mModel, SIGNAL(rowsRemoved(QModelIndex, int, int)),
-			this, SLOT(onRowsRemoved(QModelIndex, int, int)));
+			this, SLOT(onScheduleRedrawAll()));
 	connect(mModel, SIGNAL(modelReset()),
-			this, SLOT(onModelReset()));
-//	connect(mModel, SIGNAL(rowsMoved(QModelIndex, int, int, QModelIndex, row)),
-//			this, SLOT(onRowsMoved(QModelIndex, int, int, QModelIndex, row)));
-	redraw();
-	wrefresh(mWindow);
+			this, SLOT(onScheduleRedrawAll()));
+	onScheduleRedrawAll();
 }
 
 int ListView::getSelection() const
@@ -133,46 +133,17 @@ void ListView::onDataChanged(const QModelIndex &topLeft,
 	redrawRows(topLeft.row(), bottomRight.row());
 }
 
-void ListView::onLayoutChanged()
+void ListView::onRedrawAll()
 {
 	redraw();
 	wrefresh(mWindow);
 }
 
-void ListView::onRowsInserted(const QModelIndex &parent, int first, int last)
+void ListView::onScheduleRedrawAll()
 {
-	Q_UNUSED(parent);
-	Q_UNUSED(last);
-	redrawRows(first, mModel->rowCount() - 1);
-	wrefresh(mWindow);
-}
-
-void ListView::onRowsRemoved(const QModelIndex &parent, int first, int last)
-{
-	Q_UNUSED(parent);
-	Q_UNUSED(last);
-	redrawRows(first, mModel->rowCount() - 1);
-	int firstEmpty = mModel->rowCount() - mStartIndex;
-	if (firstEmpty >= 0 && firstEmpty < getListHeight()) {
-		wmove(mWindow, firstEmpty, 0);
-		wclrtobot(mWindow);
-	}
-	wrefresh(mWindow);
-}
-
-void ListView::onModelReset()
-{
-	redraw();
-	wrefresh(mWindow);
-}
-
-void ListView::onRowsMoved(const QModelIndex &parent, int start, int end,
-						   const QModelIndex &destination, int row)
-{
-	Q_UNUSED(parent);
-	Q_UNUSED(destination);
-	redrawRows(qMin(start, row), qMax(end, row));
-	wrefresh(mWindow);
+	if (mRedrawTimer->isActive())
+		return;
+	mRedrawTimer->start();
 }
 
 int ListView::getListHeight() const

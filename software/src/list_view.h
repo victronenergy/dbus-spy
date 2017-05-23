@@ -6,6 +6,7 @@
 
 class QAbstractItemModel;
 class QModelIndex;
+class QTimer;
 
 class ListView : public QObject
 {
@@ -35,16 +36,9 @@ protected:
 private slots:
 	void onDataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight);
 
-	void onLayoutChanged();
+	void onRedrawAll();
 
-	void onRowsInserted(const QModelIndex &parent, int first, int last);
-
-	void onRowsRemoved(const QModelIndex &parent, int first, int last);
-
-	void onModelReset();
-
-	void onRowsMoved(const QModelIndex &parent, int start, int end,
-					 const QModelIndex &destination, int row);
+	void onScheduleRedrawAll();
 
 private:
 	int getListHeight() const;
@@ -53,6 +47,7 @@ private:
 
 	WINDOW *mWindow;
 	QAbstractItemModel *mModel;
+	QTimer *mRedrawTimer;
 	int mStartIndex;
 	int mSelectionIndex;
 };

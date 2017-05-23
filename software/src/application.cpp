@@ -108,23 +108,23 @@ void Application::onCursesTimer()
 void Application::onGoBack()
 {
 	if (mObjects != 0) {
-		mObjects->deleteLater();
+		delete mObjects;
 		mObjects = 0;
 	}
 	mServices = new ServicesScreen(mRoot, this);
 	connect(mServices, SIGNAL(serviceSelected(VeQItem *)),
-			this, SLOT(onServiceSelected(VeQItem *)));
+			this, SLOT(onServiceSelected(VeQItem *)), Qt::QueuedConnection);
 }
 
 void Application::onServiceSelected(VeQItem *serviceRoot)
 {
 	if (mServices != 0) {
-		mServices->deleteLater();
+		delete mServices;
 		mServices = 0;
 	}
 	Q_ASSERT(mObjects == 0);
 	mObjects = new ObjectsScreen(serviceRoot, this);
-	connect(mObjects, SIGNAL(goBack()), this, SLOT(onGoBack()));
+	connect(mObjects, SIGNAL(goBack()), this, SLOT(onGoBack()), Qt::QueuedConnection);
 }
 
 void Application::onDBusItemAdded(VeQItem *item)
