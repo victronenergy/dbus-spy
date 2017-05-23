@@ -1,12 +1,13 @@
 #include <QDBusVariant>
 #include <velib/qt/ve_qitem.hpp>
+#include "favorites_list_model.h"
 #include "object_list_model.h"
 #include "object_listview.h"
 #include "list_view.h"
 
-ObjectListView::ObjectListView(ObjectListModel *model, WINDOW *w,
-							   QObject *parent):
+ObjectListView::ObjectListView(AbstractObjectListModel *model, WINDOW *w, QObject *parent):
 	ListView(w, parent),
+	mFavorites(0),
 	mShowText(false)
 {
 	setModel(model);
@@ -42,16 +43,19 @@ void ObjectListView::setShowText(bool s)
 	wrefresh(window());
 }
 
+void ObjectListView::setFavorites(FavoritesListModel *favorites)
+{
+	mFavorites = favorites;
+}
+
 void ObjectListView::drawRow(int index, int width) const
 {
 	VeQItem *item = getItem(index);
 	if (item == 0)
 		return;
-	VeQItem *root = static_cast<ObjectListModel *>(model())->getRoot();
-	QString bind = item->getRelId(root);
 	QString line;
 	line.reserve(width);
-	line = bind.mid(bind.indexOf('/') + 1);
+	line = model()->getItemName(item);
 	QString text;
 	if (item->isLeaf()) {
 		if (mShowText) {
@@ -71,16 +75,28 @@ void ObjectListView::drawRow(int index, int width) const
 	waddstr(window(), line.toLatin1().data());
 }
 
+bool ObjectListView::isEmphasized(int index) const
+{
+	if (mFavorites == 0)
+		return false;
+	VeQItem *item = getItem(index);
+	if (item == 0)
+		return false;
+	if (model() == mFavorites)
+		return mFavorites->isServiceRoot(item);
+	return mFavorites->hasItem(item);
+}
+
 void ObjectListView::onValueChanged()
 {
 	if (!mShowText)
-		updateItem();
+		updateItem(static_cast<VeQItem *>(sender()));
 }
 
 void ObjectListView::onTextChanged()
 {
 	if (mShowText)
-		updateItem();
+		updateItem(static_cast<VeQItem *>(sender()));
 }
 
 void ObjectListView::onDestroyed()
@@ -88,11 +104,9 @@ void ObjectListView::onDestroyed()
 	mItems.removeOne(static_cast<VeQItem *>(sender()));
 }
 
-void ObjectListView::updateItem()
+void ObjectListView::updateItem(VeQItem *item)
 {
-	VeQItem *item = static_cast<VeQItem *>(sender());
-	ObjectListModel *m = static_cast<ObjectListModel *>(model());
-	int i = m->indexOf(item);
+	int i = model()->indexOf(item);
 	redrawRows(i, i);
 	wrefresh(window());
 }

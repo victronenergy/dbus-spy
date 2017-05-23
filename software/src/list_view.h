@@ -4,7 +4,7 @@
 #include <QObject>
 #include <ncurses.h>
 
-class QAbstractItemModel;
+class AbstractObjectListModel;
 class QModelIndex;
 class QTimer;
 
@@ -14,9 +14,9 @@ class ListView : public QObject
 public:
 	ListView(WINDOW *w, QObject *parent = 0);
 
-	QAbstractItemModel *model() const;
+	AbstractObjectListModel *model() const;
 
-	void setModel(QAbstractItemModel *m);
+	void setModel(AbstractObjectListModel *m);
 
 	int getSelection() const;
 
@@ -30,6 +30,8 @@ public:
 
 protected:
 	virtual void drawRow(int index, int width) const;
+
+	virtual bool isEmphasized(int index) const;
 
 	WINDOW *window() const;
 
@@ -46,7 +48,7 @@ private:
 	void _redrawRow(int index);
 
 	WINDOW *mWindow;
-	QAbstractItemModel *mModel;
+	AbstractObjectListModel *mModel;
 	QTimer *mRedrawTimer;
 	int mStartIndex;
 	int mSelectionIndex;

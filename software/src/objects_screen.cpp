@@ -1,27 +1,32 @@
 #include <velib/qt/ve_qitem.hpp>
+#include "favorites_list_model.h"
 #include "objects_screen.h"
 #include "object_list_model.h"
 #include "object_listview.h"
 
-ObjectsScreen::ObjectsScreen(VeQItem *root, QObject *parent):
+ObjectsScreen::ObjectsScreen(const QString &title, AbstractObjectListModel *model,
+							 FavoritesListModel *favorites, QObject *parent):
 	QObject(parent),
 	mTitleWindow(0),
 	mListViewWindow(0),
 	mListView(0),
+	mFavorites(favorites),
 	mEditWindow(0),
 	mEditForm(0)
 {
 	mTitleWindow = newwin(1, getmaxx(stdscr), 0, 0);
 	wmove(mTitleWindow, 0, 0);
 	wattron(mTitleWindow, COLOR_PAIR(1));
-	wprintw(mTitleWindow, root->id().toLatin1().data());
+	wprintw(mTitleWindow, title.toLatin1().data());
 	wattroff(mTitleWindow, COLOR_PAIR(1));
 	wrefresh(mTitleWindow);
 
 	mListViewWindow = newwin(getmaxy(stdscr) - 2, getmaxx(stdscr), 1, 0);
 	keypad(mListViewWindow, true);
-	ObjectListModel *model = new ObjectListModel(root, true, this);
 	mListView = new ObjectListView(model, mListViewWindow, this);
+	mListView->setFavorites(mFavorites);
+	if (model != favorites)
+		mListView->setFavorites(favorites);
 	refresh();
 }
 
@@ -36,9 +41,20 @@ bool ObjectsScreen::handleInput(int c)
 			return true;
 		case KEY_ENTER:
 		case '\n':
-		{
 			startEdit("Edit value: ", mListView->getValue(mListView->getSelection()));
 			refresh();
+			return true;
+		case 'f':
+		{
+			int row = mListView->getSelection();
+			VeQItem *item = mListView->model()->getItem(row);
+			if (mFavorites->hasItem(item))
+				mFavorites->removeItem(item);
+			else
+				mFavorites->addItem(item);
+			/// @todo EV Ugly construction. updateItem should be called by the listview via signals
+			/// from mFavorites.
+			mListView->updateItem(item);
 			return true;
 		}
 		case 't':

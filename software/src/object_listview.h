@@ -4,14 +4,15 @@
 #include <QList>
 #include "list_view.h"
 
-class ObjectListModel;
+class AbstractObjectListModel;
+class FavoritesListModel;
 class VeQItem;
 
 class ObjectListView : public ListView
 {
 	Q_OBJECT
 public:
-	ObjectListView(ObjectListModel *model, WINDOW *w, QObject *parent = 0);
+	ObjectListView(AbstractObjectListModel *model, WINDOW *w, QObject *parent = 0);
 
 	QString getValue(int index);
 
@@ -21,8 +22,14 @@ public:
 
 	void setShowText(bool s);
 
+	void setFavorites(FavoritesListModel *favorites);
+
+	void updateItem(VeQItem *item);
+
 protected:
 	virtual void drawRow(int index, int width) const;
+
+	virtual bool isEmphasized(int index) const;
 
 private slots:
 	void onValueChanged();
@@ -32,12 +39,12 @@ private slots:
 	void onDestroyed();
 
 private:
-	void updateItem();
-
 	VeQItem *getItem(int index) const;
 
 	static QString convertVariant(const QVariant &value);
+
 	mutable QList<VeQItem *> mItems;
+	FavoritesListModel *mFavorites;
 	bool mShowText;
 };
 

@@ -1,5 +1,5 @@
-#include <QAbstractItemModel>
 #include <QTimer>
+#include "abstract_object_list_model.h"
 #include "list_view.h"
 
 ListView::ListView(WINDOW *w, QObject *parent):
@@ -15,12 +15,12 @@ ListView::ListView(WINDOW *w, QObject *parent):
 	connect(mRedrawTimer, SIGNAL(timeout()), this, SLOT(onRedrawAll()));
 }
 
-QAbstractItemModel *ListView::model() const
+AbstractObjectListModel *ListView::model() const
 {
 	return mModel;
 }
 
-void ListView::setModel(QAbstractItemModel *m)
+void ListView::setModel(AbstractObjectListModel *m)
 {
 	if (mModel == m)
 		return;
@@ -97,6 +97,12 @@ void ListView::drawRow(int index, int width) const
 	wprintw(mWindow, v.toString().left(width).toLatin1().data());
 }
 
+bool ListView::isEmphasized(int index) const
+{
+	Q_UNUSED(index);
+	return false;
+}
+
 WINDOW *ListView::window() const
 {
 	return mWindow;
@@ -106,6 +112,7 @@ void ListView::redraw()
 {
 	if (mModel == 0)
 		return;
+	mSelectionIndex = qBound(0, mSelectionIndex, mModel->rowCount() - 1);
 	int h = getListHeight();
 	wmove(mWindow, 0, 0);
 	int endIndex = qMin(mModel->rowCount(), h + mStartIndex);
@@ -158,13 +165,15 @@ void ListView::_redrawRow(int index)
 	int r = index - mStartIndex;
 	if (r >= getListHeight())
 		return;
-	if (index == mSelectionIndex)
-		wattron(mWindow, COLOR_PAIR(2));
+	bool bold = isEmphasized(index);
+	int attr = index == mSelectionIndex ? (bold ? COLOR_PAIR(3) : COLOR_PAIR(2)) : 0;
+	if (bold)
+		attr |= A_BOLD;
+	wattron(mWindow, attr);
 	wmove(mWindow, r, 0);
 	wclrtoeol(mWindow);
 	wmove(mWindow, r, 0);
 	int w = getmaxx(mWindow);
 	drawRow(index, w);
-	if (index == mSelectionIndex)
-		wattroff(mWindow, COLOR_PAIR(2));
+	wattroff(mWindow, attr);
 }

@@ -2,7 +2,7 @@
 #include "object_list_model.h"
 
 ObjectListModel::ObjectListModel(VeQItem *root, bool recursive, QObject *parent):
-	QAbstractListModel(parent),
+	AbstractObjectListModel(parent),
 	mRoot(root),
 	mRecursive(recursive)
 {
@@ -63,9 +63,12 @@ VeQItem *ObjectListModel::getItem(int index) const
 	return mItems[index];
 }
 
-VeQItem *ObjectListModel::getRoot() const
+QString ObjectListModel::getItemName(VeQItem *item) const
 {
-	return mRoot;
+	QString name = item->getRelId(mRoot);
+	if (name.startsWith('/'))
+		name.remove(0, 1);
+	return name;
 }
 
 int ObjectListModel::indexOf(VeQItem *item) const

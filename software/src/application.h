@@ -4,6 +4,7 @@
 #include <QCoreApplication>
 #include <QSet>
 
+class FavoritesListModel;
 class ListView;
 class ObjectsScreen;
 class QTimer;
@@ -25,6 +26,10 @@ private slots:
 
 	void onGoBack();
 
+	void onGoToFavorites();
+
+	void onLeaveFavorites();
+
 	void onServiceSelected(VeQItem *serviceRoot);
 
 	void onDBusItemAdded(VeQItem *item);
@@ -34,9 +39,12 @@ private slots:
 private:
 	QTimer *mTimer;
 	VeQItem *mRoot;
+	FavoritesListModel *mFavoritesModel;
 	ServicesScreen *mServices;
 	ObjectsScreen *mObjects;
+	ObjectsScreen *mFavorites;
 	QSet<QString> mIncompatibleServices;
+	QString mPrevPath;
 	bool mUseIntrospect;
 };
 

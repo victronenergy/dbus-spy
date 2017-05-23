@@ -45,7 +45,9 @@ INCLUDEPATH += \
 
 SOURCES += \
     src/main.cpp \
+    src/abstract_object_list_model.cpp \
     src/application.cpp \
+    src/favorites_list_model.cpp \
     src/services_screen.cpp \
     src/objects_screen.cpp \
     src/list_view.cpp \
@@ -55,7 +57,9 @@ SOURCES += \
     src/arguments.cpp
 
 HEADERS += \
+    src/abstract_object_list_model.h \
     src/application.h \
+    src/favorites_list_model.h \
     src/services_screen.h \
     src/objects_screen.h \
     src/list_view.h \

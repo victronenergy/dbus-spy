@@ -1,14 +1,9 @@
 #ifndef DBUSOBJECTMODEL_H
 #define DBUSOBJECTMODEL_H
 
-#include <QAbstractListModel>
-#include <QByteArray>
-#include <QList>
+#include "abstract_object_list_model.h"
 
-class ServiceObserver;
-class VeQItem;
-
-class ObjectListModel : public QAbstractListModel
+class ObjectListModel : public AbstractObjectListModel
 {
 	Q_OBJECT
 	Q_PROPERTY(QString path READ path WRITE setPath NOTIFY pathChanged)
@@ -28,11 +23,11 @@ public:
 
 	virtual int rowCount(const QModelIndex &parent = QModelIndex()) const;
 
-	VeQItem *getItem(int index) const;
+	virtual VeQItem *getItem(int index) const;
 
-	VeQItem *getRoot() const;
+	virtual QString getItemName(VeQItem *item) const;
 
-	int indexOf(VeQItem *item) const;
+	virtual int indexOf(VeQItem *item) const;
 
 signals:
 	void pathChanged();

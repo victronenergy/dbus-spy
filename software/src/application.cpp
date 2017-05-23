@@ -7,6 +7,8 @@
 #include <ncurses.h>
 #include "application.h"
 #include "arguments.h"
+#include "favorites_list_model.h"
+#include "object_list_model.h"
 #include "objects_screen.h"
 #include "services_screen.h"
 
@@ -79,8 +81,10 @@ Application::Application(int &argc, char **argv):
 	QCoreApplication(argc, argv),
 	mTimer(0),
 	mRoot(0),
+	mFavoritesModel(0),
 	mServices(0),
 	mObjects(0),
+	mFavorites(0),
 	mUseIntrospect(false)
 {
 	QCoreApplication::setApplicationVersion(VERSION);
@@ -114,6 +118,7 @@ int Application::init()
 	VeQItemDbusProducer *producer = new CustomQItemProducer<VeQItemDbusProducer, VeQItemDbus>(VeQItems::getRoot(), "dbus", true, true, this);
 	producer->open(dbusAddress);
 	mRoot = producer->services();
+	mFavoritesModel = new FavoritesListModel(mRoot, this);
 	// We need som extra code here to catch the com.victronenergy.settings service, because it does
 	// not support a GetValue on the root, which is used by VeQItemDbusProducer to harvest all
 	// existing items in the D-Bus services.
@@ -128,8 +133,9 @@ int Application::init()
 
 	initscr();
 	start_color();
-	init_pair(1, COLOR_WHITE, COLOR_MAGENTA);
-	init_pair(2, COLOR_BLACK, COLOR_CYAN);
+	init_pair(1, COLOR_WHITE, COLOR_MAGENTA); // Title bar
+	init_pair(2, COLOR_BLACK, COLOR_CYAN); // Selected
+	init_pair(3, COLOR_WHITE, COLOR_CYAN); // Selected and favorite
 	cbreak();
 	noecho();
 	keypad(stdscr, TRUE);
@@ -156,10 +162,22 @@ void Application::onCursesTimer()
 		if (ret != 1)
 			return;
 		int c = getch();
-		bool handled = mObjects == 0 ? mServices->handleInput(c) : mObjects->handleInput(c);
+		bool handled = false;
+		if (mObjects != 0)
+			handled = mObjects->handleInput(c);
+		else if (mServices != 0)
+			handled = mServices->handleInput(c);
+		else if (mFavorites != 0)
+			handled = mFavorites->handleInput(c);
 		if (!handled) {
 			switch (c)
 			{
+			case 'F':
+				if (mFavorites == 0)
+					onGoToFavorites();
+				else
+					onLeaveFavorites();
+				break;
 			case 'q':
 				quit();
 				break;
@@ -176,9 +194,39 @@ void Application::onGoBack()
 		delete mObjects;
 		mObjects = 0;
 	}
+	if (mFavorites != 0) {
+		delete mFavorites;
+		mFavorites = 0;
+	}
+	mPrevPath.clear();
 	mServices = new ServicesScreen(mRoot, this);
 	connect(mServices, SIGNAL(serviceSelected(VeQItem *)),
 			this, SLOT(onServiceSelected(VeQItem *)), Qt::QueuedConnection);
+}
+
+void Application::onGoToFavorites()
+{
+	if (mFavorites != 0)
+		return;
+	if (mObjects != 0) {
+		delete mObjects;
+		mObjects = 0;
+	}
+	if (mServices != 0) {
+		delete mServices;
+		mServices = 0;
+	}
+	mFavorites = new ObjectsScreen("Favorites", mFavoritesModel, mFavoritesModel, this);
+	connect(mFavorites, SIGNAL(goBack()), this, SLOT(onGoBack()), Qt::QueuedConnection);
+}
+
+void Application::onLeaveFavorites()
+{
+	VeQItem *serviceroot = mPrevPath.isEmpty() ? 0 : VeQItems::getRoot()->itemGet(mPrevPath);
+	if (serviceroot == 0)
+		onGoBack();
+	else
+		onServiceSelected(serviceroot);
 }
 
 void Application::onServiceSelected(VeQItem *serviceRoot)
@@ -187,8 +235,15 @@ void Application::onServiceSelected(VeQItem *serviceRoot)
 		delete mServices;
 		mServices = 0;
 	}
+	if (mFavorites != 0) {
+		delete mFavorites;
+		mFavorites = 0;
+	}
 	Q_ASSERT(mObjects == 0);
-	mObjects = new ObjectsScreen(serviceRoot, this);
+	ObjectListModel *model = new ObjectListModel(serviceRoot, true);
+	mPrevPath = serviceRoot->uniqueId();
+	mObjects = new ObjectsScreen(serviceRoot->id(), model, mFavoritesModel, this);
+	model->setParent(mObjects);
 	connect(mObjects, SIGNAL(goBack()), this, SLOT(onGoBack()), Qt::QueuedConnection);
 }
 
