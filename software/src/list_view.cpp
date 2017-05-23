@@ -24,16 +24,16 @@ void ListView::setModel(QAbstractItemModel *m)
 			this, SLOT(onDataChanged(QModelIndex, QModelIndex)));
 	connect(mModel, SIGNAL(layoutChanged()),
 			this, SLOT(onLayoutChanged()));
-	connect(mModel, SIGNAL(layoutAboutToBeChanged()),
-			this, SLOT(onLayoutAboutToBeChanged()));
+//	connect(mModel, SIGNAL(layoutAboutToBeChanged()),
+//			this, SLOT(onLayoutAboutToBeChanged()));
 	connect(mModel, SIGNAL(rowsInserted(QModelIndex, int, int)),
 			this, SLOT(onRowsInserted(QModelIndex, int, int)));
 	connect(mModel, SIGNAL(rowsRemoved(QModelIndex, int, int)),
 			this, SLOT(onRowsRemoved(QModelIndex, int, int)));
 	connect(mModel, SIGNAL(modelReset()),
 			this, SLOT(onModelReset()));
-	connect(mModel, SIGNAL(rowsMoved(QModelIndex, int, int, QModelIndex, row)),
-			this, SLOT(onRowsMoved(QModelIndex, int, int, QModelIndex, row)));
+//	connect(mModel, SIGNAL(rowsMoved(QModelIndex, int, int, QModelIndex, row)),
+//			this, SLOT(onRowsMoved(QModelIndex, int, int, QModelIndex, row)));
 	redraw();
 	wrefresh(mWindow);
 }
