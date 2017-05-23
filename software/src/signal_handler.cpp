@@ -20,9 +20,10 @@ SignalHandler::SignalHandler(QObject *parent):
 void SignalHandler::add(int signal)
 {
 	struct sigaction term;
+	memset(&term, 0, sizeof(term));
 	term.sa_handler = SignalHandler::termSignalHandler;
 	sigemptyset(&term.sa_mask);
-	term.sa_flags |= SA_RESTART;
+	term.sa_flags = SA_RESTART;
 
 	if (sigaction(signal, &term, 0) > 0)
 		qFatal("sigaction failed");
