@@ -13,7 +13,6 @@ class ObjectListModel : public QAbstractListModel
 	Q_OBJECT
 	Q_PROPERTY(QString path READ path WRITE setPath NOTIFY pathChanged)
 	Q_PROPERTY(bool recursive READ recursive WRITE setRecursive NOTIFY recursiveChanged)
-	Q_PROPERTY(QString filterText READ filterText WRITE setFilterText NOTIFY filterTextChanged)
 public:
 	ObjectListModel(VeQItem *root = 0, bool recursive = false, QObject *parent = 0);
 
@@ -24,10 +23,6 @@ public:
 	bool recursive() const;
 
 	void setRecursive(bool r);
-
-	QString filterText() const;
-
-	void setFilterText(const QString &t);
 
 	virtual QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
 
@@ -44,8 +39,6 @@ signals:
 
 	void recursiveChanged();
 
-	void filterTextChanged();
-
 protected:
 	virtual QHash<int, QByteArray> roleNames() const;
 
@@ -61,16 +54,17 @@ private:
 
 	void updateRoot();
 
-	void connectItem(VeQItem *item);
+	void addItems(VeQItem *item);
 
-	void updateFilteredList();
+	void insertItem(VeQItem *item);
 
-	void updateFilteredList(VeQItem *root, QList<VeQItem *> &items);
+	void removeItem(VeQItem *item);
 
-	QString mFilterText;
+	void disconnectItems(VeQItem *item);
+
 	VeQItem *mRoot;
 	bool mRecursive;
-	QList<VeQItem *> mFilteredObjects;
+	QList<VeQItem *> mItems;
 };
 
 #endif // DBUSOBJECTMODEL_H
