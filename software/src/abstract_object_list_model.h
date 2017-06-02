@@ -9,7 +9,7 @@ class AbstractObjectListModel: public QAbstractListModel
 {
 	Q_OBJECT
 public:
-	AbstractObjectListModel(QObject *parent = 0);
+	using QAbstractListModel::QAbstractListModel;
 
 	virtual VeQItem *getItem(int index) const = 0;
 

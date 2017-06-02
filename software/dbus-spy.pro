@@ -29,6 +29,7 @@ TARGET = dbus-spy
 CONFIG += console qdbus
 CONFIG -= app_bundle
 DEFINES += VERSION=\\\"$${VERSION}\\\"
+QMAKE_CXXFLAGS += -std=c++11 # QT4 only, use CONFIG += c++11 for QT5
 
 OBJECTS_DIR = .obj
 MOC_DIR = .moc
@@ -45,7 +46,6 @@ INCLUDEPATH += \
 
 SOURCES += \
     src/main.cpp \
-    src/abstract_object_list_model.cpp \
     src/application.cpp \
     src/favorites_list_model.cpp \
     src/services_screen.cpp \

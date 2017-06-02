@@ -13,7 +13,7 @@ SignalHandler::SignalHandler(QObject *parent):
 {
 	if (::socketpair(AF_UNIX, SOCK_STREAM, 0, sigtermFd))
 		qFatal("Couldn't create TERM socketpair");
-	snTerm = new QSocketNotifier(sigtermFd[1], QSocketNotifier::Read, this);
+	snTerm = new QSocketNotifier{sigtermFd[1], QSocketNotifier::Read, this};
 	connect(snTerm, SIGNAL(activated(int)), this, SLOT(handleSigTerm()));
 }
 

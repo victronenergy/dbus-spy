@@ -37,7 +37,7 @@ QString FavoritesListModel::getItemName(VeQItem *item) const
 {
 	VeQItem *itemRoot = getServiceRoot(item);
 	if (itemRoot == nullptr)
-		return QString();
+		return QString{};
 	return isServiceRoot(item) ? item->id() : item->getRelId(itemRoot);
 }
 

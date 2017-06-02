@@ -7,12 +7,7 @@
 ObjectsScreen::ObjectsScreen(const QString &title, AbstractObjectListModel *model,
 							 FavoritesListModel *favorites, QObject *parent):
 	QObject(parent),
-	mTitleWindow(0),
-	mListViewWindow(0),
-	mListView(0),
-	mFavorites(favorites),
-	mEditWindow(0),
-	mEditForm(0)
+	mFavorites(favorites)
 {
 	mTitleWindow = newwin(1, getmaxx(stdscr), 0, 0);
 	wmove(mTitleWindow, 0, 0);
@@ -23,7 +18,7 @@ ObjectsScreen::ObjectsScreen(const QString &title, AbstractObjectListModel *mode
 
 	mListViewWindow = newwin(getmaxy(stdscr) - 2, getmaxx(stdscr), 1, 0);
 	keypad(mListViewWindow, true);
-	mListView = new ObjectListView(model, mListViewWindow, this);
+	mListView = new ObjectListView{model, mListViewWindow, this};
 	mListView->setFavorites(mFavorites);
 	if (model != favorites)
 		mListView->setFavorites(favorites);
@@ -32,7 +27,7 @@ ObjectsScreen::ObjectsScreen(const QString &title, AbstractObjectListModel *mode
 
 bool ObjectsScreen::handleInput(int c)
 {
-	if (mEditForm == 0)
+	if (mEditForm == nullptr)
 	{
 		switch (c)
 		{
@@ -127,8 +122,8 @@ bool ObjectsScreen::handleInput(int c)
 
 QString ObjectsScreen::getEditValue() const
 {
-	if (mEditForm == 0)
-		return QString();
+	if (mEditForm == nullptr)
+		return QString{};
 	form_driver(mEditForm, REQ_VALIDATION);
 	QString r = field_buffer(mEditFields[0], 0);
 	return r.trimmed();
@@ -136,7 +131,7 @@ QString ObjectsScreen::getEditValue() const
 
 void ObjectsScreen::startEdit(const QString &description, const QString &text)
 {
-	if (mEditForm != 0)
+	if (mEditForm != nullptr)
 		return;
 	int y = getmaxy(stdscr) - 1;
 	int x0 = description.size();
@@ -162,7 +157,7 @@ void ObjectsScreen::startEdit(const QString &description, const QString &text)
 
 void ObjectsScreen::endEdit()
 {
-	if (mEditForm == 0)
+	if (mEditForm == nullptr)
 		return;
 	curs_set(0);
 	int y = getmaxy(stdscr) - 1;
@@ -172,5 +167,5 @@ void ObjectsScreen::endEdit()
 	delwin(mEditWindow);
 	free_form(mEditForm);
 	free_field(mEditFields[0]);
-	mEditForm = 0;
+	mEditForm = nullptr;
 }

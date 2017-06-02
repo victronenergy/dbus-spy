@@ -19,23 +19,20 @@ public:
 
 	void setRecursive(bool r);
 
-	virtual QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
+	QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
 
-	virtual int rowCount(const QModelIndex &parent = QModelIndex()) const;
+	int rowCount(const QModelIndex &parent = QModelIndex()) const override;
 
-	virtual VeQItem *getItem(int index) const;
+	VeQItem *getItem(int index) const override;
 
-	virtual QString getItemName(VeQItem *item) const;
+	QString getItemName(VeQItem *item) const override;
 
-	virtual int indexOf(VeQItem *item) const;
+	int indexOf(VeQItem *item) const override;
 
 signals:
 	void pathChanged();
 
 	void recursiveChanged();
-
-protected:
-	virtual QHash<int, QByteArray> roleNames() const;
 
 private slots:
 	void onChildAdded(VeQItem *item);
@@ -57,8 +54,8 @@ private:
 
 	void disconnectItems(VeQItem *item);
 
-	VeQItem *mRoot;
-	bool mRecursive;
+	VeQItem *mRoot = nullptr;
+	bool mRecursive = false;
 	QList<VeQItem *> mItems;
 };
 

@@ -2,20 +2,30 @@
 #define ARGUMENTS_H
 
 #include <QMap>
-#include <QStringList>
+#include <QString>
 
 class Arguments
 {
 public:
 	Arguments();
 
-	bool contains(const QString& switchName) const { return mArgList.contains(switchName); }
-	QString value(const QString &switchName) const { return mArgList.value(switchName); }
+	bool contains(const QString &option) const
+	{
+		return mArgList.contains(option);
+	}
+
+	QString value(const QString &option) const
+	{
+		return mArgList.value(option);
+	}
 
 	void print();
+
 	void help();
+
 	void version();
-	void addArg(const QString & arg, const QString & description);
+
+	void addArg(const QString &arg, const QString &description);
 private:
 	QMap<QString, QString> mArgList;
 	QMap<QString, QString> mHelp;

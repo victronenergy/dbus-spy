@@ -11,12 +11,12 @@ ObjectListModel::ObjectListModel(VeQItem *root, bool recursive, QObject *parent)
 
 QString ObjectListModel::path() const
 {
-	return mRoot == 0 ? QString() : mRoot->uniqueId();
+	return mRoot == nullptr ? QString{} : mRoot->uniqueId();
 }
 
 void ObjectListModel::setPath(const QString &path)
 {
-	QString oldPath = mRoot == 0 ? QString() : mRoot->uniqueId();
+	QString oldPath = mRoot == nullptr ? QString{} : mRoot->uniqueId();
 	if (oldPath == path)
 		return;
 	mRoot = VeQItems::getRoot()->itemGet(path);
@@ -76,13 +76,6 @@ int ObjectListModel::indexOf(VeQItem *item) const
 	return mItems.indexOf(item);
 }
 
-QHash<int, QByteArray> ObjectListModel::roleNames() const
-{
-	QHash<int, QByteArray> result;
-	result[Qt::UserRole + 1] = "name";
-	return result;
-}
-
 void ObjectListModel::onChildAdded(VeQItem *item)
 {
 	if (mRecursive || item->itemParent() == mRoot)
@@ -113,7 +106,7 @@ void ObjectListModel::updateRoot()
 
 void ObjectListModel::addItems(VeQItem *item)
 {
-	if (item == 0)
+	if (item == nullptr)
 		return;
 	Q_ASSERT(!mItems.contains(item));
 	connect(item, SIGNAL(stateChanged(VeQItem *, State)),
@@ -130,7 +123,7 @@ void ObjectListModel::addItems(VeQItem *item)
 			this, SLOT(onChildRemoved(VeQItem *)));
 	if (item != mRoot && !mRecursive)
 		return;
-	for (int i=0;;++i) {
+	for (int i = 0; ; ++i) {
 		VeQItem *child = item->itemChild(i);
 		if (child == 0)
 			break;
@@ -140,7 +133,7 @@ void ObjectListModel::addItems(VeQItem *item)
 
 void ObjectListModel::insertItem(VeQItem *item)
 {
-	if (item == 0)
+	if (item == nullptr)
 		return;
 	if (!item->isLeaf() && mRecursive)
 		return;
@@ -171,7 +164,7 @@ void ObjectListModel::removeItem(VeQItem *item)
 
 void ObjectListModel::disconnectItems(VeQItem *item)
 {
-	if (item == 0)
+	if (item == nullptr)
 		return;
 	disconnect(item, SIGNAL(stateChanged(VeQItem *, State)),
 			   this, SLOT(onItemStateChanged(VeQItem *)));
@@ -187,7 +180,7 @@ void ObjectListModel::disconnectItems(VeQItem *item)
 		return;
 	for (int i=0;;++i) {
 		VeQItem *child = item->itemChild(i);
-		if (child == 0)
+		if (child == nullptr)
 			break;
 		disconnectItems(child);
 	}

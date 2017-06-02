@@ -37,16 +37,16 @@ private slots:
 	void onStateChanged(VeQItem *item);
 
 private:
-	QTimer *mTimer;
-	VeQItem *mRoot;
-	FavoritesListModel *mFavoritesModel;
-	ServicesScreen *mServices;
-	ObjectsScreen *mObjects;
-	ObjectsScreen *mFavorites;
+	QTimer *mTimer = nullptr;
+	VeQItem *mRoot = nullptr;
+	FavoritesListModel *mFavoritesModel = nullptr;
+	ServicesScreen *mServices = nullptr;
+	ObjectsScreen *mObjects = nullptr;
+	ObjectsScreen *mFavorites = nullptr;
 	QSet<QString> mIncompatibleServices;
 	QString mPrevPath;
-	bool mUseIntrospect;
-	int mInitCount;
+	bool mUseIntrospect = false;
+	int mInitCount = 0;
 };
 
 #endif // APPLICATION_H

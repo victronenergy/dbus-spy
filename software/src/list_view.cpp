@@ -5,10 +5,7 @@
 ListView::ListView(WINDOW *w, QObject *parent):
 	QObject(parent),
 	mWindow(w),
-	mModel(0),
-	mRedrawTimer(new QTimer(this)),
-	mStartIndex(0),
-	mSelectionIndex(0)
+	mRedrawTimer(new QTimer(this))
 {
 	mRedrawTimer->setInterval(100);
 	mRedrawTimer->setSingleShot(true);
@@ -110,7 +107,7 @@ WINDOW *ListView::window() const
 
 void ListView::redraw()
 {
-	if (mModel == 0)
+	if (mModel == nullptr)
 		return;
 	mSelectionIndex = qBound(0, mSelectionIndex, mModel->rowCount() - 1);
 	int h = getListHeight();
@@ -160,7 +157,7 @@ int ListView::getListHeight() const
 
 void ListView::_redrawRow(int index)
 {
-	if (index < mStartIndex || mModel == 0 || index >= mModel->rowCount())
+	if (index < mStartIndex || mModel == nullptr || index >= mModel->rowCount())
 		return;
 	int r = index - mStartIndex;
 	if (r >= getListHeight())

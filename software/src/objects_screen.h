@@ -30,13 +30,13 @@ private:
 
 	void endEdit();
 
-	WINDOW *mTitleWindow;
-	WINDOW *mListViewWindow;
-	ObjectListView *mListView;
-	FavoritesListModel *mFavorites;
-	WINDOW *mEditWindow;
+	WINDOW *mTitleWindow = nullptr;
+	WINDOW *mListViewWindow = nullptr;
+	ObjectListView *mListView = nullptr;
+	FavoritesListModel *mFavorites = nullptr;
+	WINDOW *mEditWindow = nullptr;
 	FIELD *mEditFields[2];
-	FORM *mEditForm;
+	FORM *mEditForm = nullptr;
 };
 
 #endif // OBJECTSSCREEN_H

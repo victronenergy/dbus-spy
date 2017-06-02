@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
 	// qInstallMessageHandler(myMessageOutput);
 	qInstallMsgHandler(myMessageOutput);
 
-	Application a(argc, argv);
+	Application a{argc, argv};
 
 	SignalHandler h;
 	h.add(SIGINT);

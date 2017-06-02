@@ -37,8 +37,8 @@ private:
 	VeQItem *getServiceRoot(VeQItem *item) const;
 
 	QList<VeQItem *> mItems;
-	VeQItem *mRoot;
-	QSettings *mSettings;
+	VeQItem *mRoot = nullptr;
+	QSettings *mSettings = nullptr;
 };
 
 #endif // FAVORITES_LIST_MODEL_H

@@ -27,9 +27,9 @@ public:
 	void updateItem(VeQItem *item);
 
 protected:
-	virtual void drawRow(int index, int width) const;
+	void drawRow(int index, int width) const override;
 
-	virtual bool isEmphasized(int index) const;
+	bool isEmphasized(int index) const override;
 
 private slots:
 	void onValueChanged();
@@ -44,8 +44,8 @@ private:
 	static QString convertVariant(const QVariant &value);
 
 	mutable QList<VeQItem *> mItems;
-	FavoritesListModel *mFavorites;
-	bool mShowText;
+	FavoritesListModel *mFavorites = nullptr;
+	bool mShowText = false;
 };
 
 #endif // OBJECTLISTVIEW_H

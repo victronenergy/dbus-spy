@@ -16,7 +16,7 @@ class SignalHandler : public QObject
 {
 	Q_OBJECT
 public:
-	SignalHandler(QObject *parent = 0);
+	SignalHandler(QObject *parent = nullptr);
 
 	void add(int signal);
 
@@ -31,7 +31,7 @@ private slots:
 private:
 	static int sigtermFd[2];
 
-	QSocketNotifier *snTerm;
+	QSocketNotifier *snTerm = nullptr;
 };
 
 #endif // SIGNALHANDLER_H

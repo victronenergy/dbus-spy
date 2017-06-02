@@ -45,55 +45,15 @@ public:
 	}
 };
 
-//class NoStorageQItem: public VeQItemDbus
-//{
-//public:
-//	NoStorageQItem(VeQItemDbusProducer *producer):
-//		VeQItemDbus(producer)
-//	{}
-
-//	virtual int setValue(QVariant const &value)
-//	{
-//		int i = setValue(value);
-//		if (i != 0)
-//			return i;
-//		setState(VeQItem::Synchronized);
-//		return 0;
-//	}
-//};
-
-//class NoStorageQItemProducer: public VeQItemDbusProducer
-//{
-//public:
-//	NoStorageQItemProducer(VeQItem *root, QString id, bool findVictronServices = true,
-//		bool bulkInitOfNewService = true, QObject *parent = 0):
-//		VeQItemDbusProducer(root, id, findVictronServices, bulkInitOfNewService, parent)
-//	{}
-
-
-//	virtual VeQItem *createItem()
-//	{
-//		return new NoStorageQItem(this);
-//	}
-//};
-
 Application::Application(int &argc, char **argv):
-	QCoreApplication(argc, argv),
-	mTimer(0),
-	mRoot(0),
-	mFavoritesModel(0),
-	mServices(0),
-	mObjects(0),
-	mFavorites(0),
-	mUseIntrospect(false),
-        mInitCount(0)
+	QCoreApplication(argc, argv)
 {
 	QCoreApplication::setApplicationVersion(VERSION);
 }
 
 Application::~Application()
 {
-	if (mTimer != 0)
+	if (mTimer != nullptr)
 		endwin();
 }
 
@@ -116,7 +76,7 @@ int Application::init()
 
 	QString dbusAddress = args.contains("dbus") ? args.value("dbus") : "system";
 
-	VeQItemDbusProducer *producer = new CustomQItemProducer<VeQItemDbusProducer, VeQItemDbus>(VeQItems::getRoot(), "dbus", true, true, this);
+	auto producer = new CustomQItemProducer<VeQItemDbusProducer, VeQItemDbus>{VeQItems::getRoot(), "dbus", true, true, this};
 	producer->open(dbusAddress);
 	mRoot = producer->services();
 	// We need som extra code here to catch the com.victronenergy.settings service, because it does
@@ -124,7 +84,7 @@ int Application::init()
 	// existing items in the D-Bus services.
 	for (int i=0;;++i) {
 		VeQItem *item = mRoot->itemChild(i);
-		if (item == 0)
+		if (item == nullptr)
 			break;
 		connect(item, SIGNAL(stateChanged(VeQItem *, State)),
 				this, SLOT(onStateChanged(VeQItem *)));
@@ -145,7 +105,7 @@ int Application::init()
 
 	onGoBack();
 
-	mTimer = new QTimer(this);
+	mTimer = new QTimer{this};
 	mTimer->setInterval(100);
 	mTimer->start();
 	connect(mTimer, SIGNAL(timeout()), this, SLOT(onCursesTimer()));
@@ -164,17 +124,17 @@ void Application::onCursesTimer()
 			return;
 		int c = getch();
 		bool handled = false;
-		if (mObjects != 0)
+		if (mObjects != nullptr)
 			handled = mObjects->handleInput(c);
-		else if (mServices != 0)
+		else if (mServices != nullptr)
 			handled = mServices->handleInput(c);
-		else if (mFavorites != 0)
+		else if (mFavorites != nullptr)
 			handled = mFavorites->handleInput(c);
 		if (!handled) {
 			switch (c)
 			{
 			case 'F':
-				if (mFavorites == 0)
+				if (mFavorites == nullptr)
 					onGoToFavorites();
 				else
 					onLeaveFavorites();
@@ -191,40 +151,40 @@ void Application::onCursesTimer()
 
 void Application::onGoBack()
 {
-	if (mObjects != 0) {
+	if (mObjects != nullptr) {
 		delete mObjects;
-		mObjects = 0;
+		mObjects = nullptr;
 	}
-	if (mFavorites != 0) {
+	if (mFavorites != nullptr) {
 		delete mFavorites;
-		mFavorites = 0;
+		mFavorites = nullptr;
 	}
 	mPrevPath.clear();
-	mServices = new ServicesScreen(mRoot, this);
+	mServices = new ServicesScreen{mRoot, this};
 	connect(mServices, SIGNAL(serviceSelected(VeQItem *)),
 			this, SLOT(onServiceSelected(VeQItem *)), Qt::QueuedConnection);
 }
 
 void Application::onGoToFavorites()
 {
-	if (mFavorites != 0)
+	if (mFavorites != nullptr)
 		return;
-	if (mObjects != 0) {
+	if (mObjects != nullptr) {
 		delete mObjects;
-		mObjects = 0;
+		mObjects = nullptr;
 	}
-	if (mServices != 0) {
+	if (mServices != nullptr) {
 		delete mServices;
-		mServices = 0;
+		mServices = nullptr;
 	}
-	mFavorites = new ObjectsScreen("Favorites", mFavoritesModel, mFavoritesModel, this);
+	mFavorites = new ObjectsScreen{"Favorites", mFavoritesModel, mFavoritesModel, this};
 	connect(mFavorites, SIGNAL(goBack()), this, SLOT(onGoBack()), Qt::QueuedConnection);
 }
 
 void Application::onLeaveFavorites()
 {
-	VeQItem *serviceroot = mPrevPath.isEmpty() ? 0 : VeQItems::getRoot()->itemGet(mPrevPath);
-	if (serviceroot == 0)
+	VeQItem *serviceroot = mPrevPath.isEmpty() ? nullptr : VeQItems::getRoot()->itemGet(mPrevPath);
+	if (serviceroot == nullptr)
 		onGoBack();
 	else
 		onServiceSelected(serviceroot);
@@ -232,18 +192,18 @@ void Application::onLeaveFavorites()
 
 void Application::onServiceSelected(VeQItem *serviceRoot)
 {
-	if (mServices != 0) {
+	if (mServices != nullptr) {
 		delete mServices;
-		mServices = 0;
+		mServices = nullptr;
 	}
-	if (mFavorites != 0) {
+	if (mFavorites != nullptr) {
 		delete mFavorites;
-		mFavorites = 0;
+		mFavorites = nullptr;
 	}
-	Q_ASSERT(mObjects == 0);
-	ObjectListModel *model = new ObjectListModel(serviceRoot, true);
+	Q_ASSERT(mObjects == nullptr);
+	auto model = new ObjectListModel{serviceRoot, true};
 	mPrevPath = serviceRoot->uniqueId();
-	mObjects = new ObjectsScreen(serviceRoot->id(), model, mFavoritesModel, this);
+	mObjects = new ObjectsScreen{serviceRoot->id(), model, mFavoritesModel, this};
 	model->setParent(mObjects);
 	connect(mObjects, SIGNAL(goBack()), this, SLOT(onGoBack()), Qt::QueuedConnection);
 }
@@ -253,7 +213,7 @@ void Application::onDBusItemAdded(VeQItem *item)
 	VeQItem *child = item;
 	for (;;) {
 		VeQItem *parent = child->itemParent();
-		if (parent == 0)
+		if (parent == nullptr)
 			return;
 		if (parent == mRoot)
 			break;
@@ -270,7 +230,7 @@ void Application::onDBusItemAdded(VeQItem *item)
 void Application::onStateChanged(VeQItem *item)
 {
 	Q_ASSERT(item->itemParent() == mRoot);
-	if (item->getState() == VeQItem::Offline && item->itemChild(0) == 0) {
+	if (item->getState() == VeQItem::Offline && item->itemChild(0) == nullptr) {
 		mIncompatibleServices.insert(item->id());
 		onDBusItemAdded(item);
 		item->produceValue(QVariant(), VeQItem::Synchronized);
@@ -278,6 +238,6 @@ void Application::onStateChanged(VeQItem *item)
 	if (mInitCount > 0 && mFavoritesModel == nullptr) {
 		--mInitCount;
 		if (mInitCount == 0)
-			mFavoritesModel = new FavoritesListModel(mRoot, this);
+			mFavoritesModel = new FavoritesListModel{mRoot, this};
 	}
 }

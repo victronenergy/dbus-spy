@@ -4,10 +4,7 @@
 #include "services_screen.h"
 
 ServicesScreen::ServicesScreen(VeQItem *root, QObject *parent):
-	QObject(parent),
-	mTitleWindow(0),
-	mListViewWindow(0),
-	mListView(0)
+	QObject(parent)
 {
 	mTitleWindow = newwin(1, getmaxx(stdscr), 0, 0);
 	wmove(mTitleWindow, 0, 0);
@@ -18,8 +15,8 @@ ServicesScreen::ServicesScreen(VeQItem *root, QObject *parent):
 
 	mListViewWindow = newwin(getmaxy(stdscr) - 2, getmaxx(stdscr), 1, 0);
 	keypad(mListViewWindow, true);
-	ObjectListModel *model = new ObjectListModel(root, false, this);
-	mListView = new ObjectListView(model, mListViewWindow, this);
+	auto model = new ObjectListModel{root, false, this};
+	mListView = new ObjectListView{model, mListViewWindow, this};
 	refresh();
 }
 
@@ -39,7 +36,7 @@ bool ServicesScreen::handleInput(int c)
 	{
 		int s = mListView->getSelection();
 		VeQItem *item = static_cast<ObjectListModel *>(mListView->model())->getItem(s);
-		if (item != 0)
+		if (item != nullptr)
 			emit serviceSelected(item);
 		return true;
 	}

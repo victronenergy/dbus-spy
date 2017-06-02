@@ -47,11 +47,11 @@ private:
 
 	void _redrawRow(int index);
 
-	WINDOW *mWindow;
-	AbstractObjectListModel *mModel;
-	QTimer *mRedrawTimer;
-	int mStartIndex;
-	int mSelectionIndex;
+	WINDOW *mWindow	= nullptr;
+	AbstractObjectListModel *mModel = nullptr;
+	QTimer *mRedrawTimer = nullptr;
+	int mStartIndex = 0;
+	int mSelectionIndex = 0;
 };
 
 #endif // LISTVIEW_H

@@ -22,9 +22,9 @@ signals:
 	void serviceSelected(VeQItem *serviceRoot);
 
 private:
-	WINDOW *mTitleWindow;
-	WINDOW *mListViewWindow;
-	ListView *mListView;
+	WINDOW *mTitleWindow = nullptr;
+	WINDOW *mListViewWindow = nullptr;
+	ListView *mListView = nullptr;
 };
 
 #endif // SERVICESSCREEN_H

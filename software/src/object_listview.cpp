@@ -6,9 +6,7 @@
 #include "list_view.h"
 
 ObjectListView::ObjectListView(AbstractObjectListModel *model, WINDOW *w, QObject *parent):
-	ListView(w, parent),
-	mFavorites(0),
-	mShowText(false)
+	ListView(w, parent)
 {
 	setModel(model);
 }
@@ -16,15 +14,15 @@ ObjectListView::ObjectListView(AbstractObjectListModel *model, WINDOW *w, QObjec
 QString ObjectListView::getValue(int index)
 {
 	VeQItem *item = getItem(index);
-	if (item == 0)
-		return QString();
+	if (item == nullptr)
+		return QString{};
 	return item->getValue().toString();
 }
 
 void ObjectListView::setValue(int index, const QVariant &v)
 {
 	VeQItem *item = getItem(index);
-	if (item == 0)
+	if (item == nullptr)
 		return;
 	item->setValue(v);
 }
@@ -57,30 +55,23 @@ void ObjectListView::drawRow(int index, int width) const
 	line.reserve(width);
 	line = model()->getItemName(item);
 	QString text;
-	if (item->isLeaf()) {
-		if (mShowText) {
-			text = item->getText();
-		} else {
-			text = convertVariant(item->getValue());
-		}
-	}
+	if (item->isLeaf())
+		text = mShowText ? item->getText() : convertVariant(item->getValue());
 	int gapSize = qMax(1, width - text.size() - line.size());
-	for (int i=0; i<gapSize; ++i) {
+	for (int i=0; i<gapSize; ++i)
 		line.append(' ');
-	}
 	int textSize = width - line.size();
-	for (int i=0; i<textSize; ++i) {
+	for (int i=0; i<textSize; ++i)
 		line.append(text[i]);
-	}
 	waddstr(window(), line.toLatin1().data());
 }
 
 bool ObjectListView::isEmphasized(int index) const
 {
-	if (mFavorites == 0)
+	if (mFavorites == nullptr)
 		return false;
 	VeQItem *item = getItem(index);
-	if (item == 0)
+	if (item == nullptr)
 		return false;
 	if (model() == mFavorites)
 		return mFavorites->isServiceRoot(item);
@@ -128,7 +119,8 @@ QString ObjectListView::convertVariant(const QVariant &value)
 {
 	// Workaround: the standard demarshall function does not convert QBusVariant objects to
 	// QVariants. This causes problems in com.victronenergy.system/pvinverterids.
-	if (value.canConvert<QDBusVariant>()) {
+	if (value.canConvert<QDBusVariant>())
+	{
 		QDBusVariant v = qvariant_cast<QDBusVariant>(value);
 		return convertVariant(v.variant());
 	}
@@ -143,7 +135,8 @@ QString ObjectListView::convertVariant(const QVariant &value)
 	{
 		QList<QVariant> list = value.toList();
 		QString r = "[";
-		foreach (QVariant v, list) {
+		for (QVariant v: list)
+		{
 			r.append(convertVariant(v));
 			r.append(',');
 		}
@@ -156,10 +149,8 @@ QString ObjectListView::convertVariant(const QVariant &value)
 	{
 		QMap<QString, QVariant> map = value.toMap();
 		QString r = "{";
-		foreach (QString key, map.keys()) {
-			QVariant value = map.value(key);
-			r.append(QString("'%1': %2,").arg(key).arg(convertVariant(value)));
-		}
+		for (auto it = map.begin(); it != map.end(); ++it)
+			r.append(QString("'%1': %2,").arg(it.key()).arg(convertVariant(it.value())));
 		if (r.size() > 1)
 			r.chop(1);
 		r.append("}");
