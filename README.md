@@ -2,12 +2,12 @@
 
 dbus-spy is a debug tool intended for the Venus embedded Linux platform created by
 [Victron Energy](http://victronenergy.com).
-This is the platform running on the CCGX display units. This application provides a realtime view
-on all properties published to the D-Bus. It is also possible to change the values of those
+This is the platform running on the CCGX and venus GX units. This application provides a realtime
+view on all properties published to the D-Bus. It is also possible to change the values of those
 properties (whenever the application publishing the property allows it).
 
 On startup dbus-spy will present a list of all victron D-Bus services on the system (the one whose
-name starts with com.victronenergy. Those systems are considered to be compatible with the methods
+name starts with com.victronenergy. Those services are considered to be compatible with the methods
 and signals we need). When activated all properties within the service will be shown together with
 the current value. The values will be updated in realtime. It is also possible to change the value.
 
@@ -29,8 +29,8 @@ dbus-spy relies on several external libraries:
   as open source. Please contact Victron Energy if you need it.
 
 You will also need the
-[venus SDK](https://www.victronenergy.com/live/open_source:ccgx:setup_development_environment). As of this moment
-you need to use version 1.40.
+[venus SDK](https://www.victronenergy.com/live/open_source:ccgx:setup_development_environment).
+As of this moment you need to use version 1.40.
 
 ## Some ceveats
 
@@ -41,13 +41,14 @@ you need to use version 1.40.
   a service, use the --introspect option on startup.
 * The application is written in C++ and uses the QT framework for D-Bus communication. However,
   the GUI is done using ncurses. The reason for this odd combination is that dbus-spy started as
-  a QT+QML application running on PC linux. Someday I decided that being able to run the applciation
-  on the embedded device itself would be more usefull. So I rewrote the GUI and kept the D-Bus code.
+  a QT+QML application running on PC linux. Someday I decided that being able to run the application
+  on the embedded device itself would be more useful. So I rewrote the GUI and kept the D-Bus code.
 * If you change a value of a property no checks are performed by the application. If the entered
-  text string looks parses to floating point value, it will be sent to the D-Bus as a 'double'
-  value. Otherwise, it will be parsed an integer. If that does not work, a string will be sent.
-  The receiving application may expect another type and may refuse to handle the value.
+  text strin parses to a floating point value, it will be sent to the D-Bus as a 'double'
+  value. Otherwise, it will be parsed an integer. If that does not work, the string itself will be
+  sent. The receiving application may expect another type and may refuse to handle the value.
 * Changing values on D-Bus services may be dangerous. Only do this if you know what you are doing.
-* The screen will not be redrawn when the size of the terminal changes. So chose it wisely.
+* The screen will not be redrawn when the size of the terminal changes. So chose it wisely before
+  starting the application.
 * Sometimes parts of the screen are not redrawn properly, especially when changing quickly between
   several services.
