@@ -85,7 +85,8 @@ Application::Application(int &argc, char **argv):
 	mServices(0),
 	mObjects(0),
 	mFavorites(0),
-	mUseIntrospect(false)
+	mUseIntrospect(false),
+        mInitCount(0)
 {
 	QCoreApplication::setApplicationVersion(VERSION);
 }
@@ -118,7 +119,6 @@ int Application::init()
 	VeQItemDbusProducer *producer = new CustomQItemProducer<VeQItemDbusProducer, VeQItemDbus>(VeQItems::getRoot(), "dbus", true, true, this);
 	producer->open(dbusAddress);
 	mRoot = producer->services();
-	mFavoritesModel = new FavoritesListModel(mRoot, this);
 	// We need som extra code here to catch the com.victronenergy.settings service, because it does
 	// not support a GetValue on the root, which is used by VeQItemDbusProducer to harvest all
 	// existing items in the D-Bus services.
@@ -128,6 +128,7 @@ int Application::init()
 			break;
 		connect(item, SIGNAL(stateChanged(VeQItem *, State)),
 				this, SLOT(onStateChanged(VeQItem *)));
+		++mInitCount;
 	}
 	connect(mRoot, SIGNAL(childAdded(VeQItem *)), this, SLOT(onDBusItemAdded(VeQItem *)));
 
@@ -269,9 +270,14 @@ void Application::onDBusItemAdded(VeQItem *item)
 void Application::onStateChanged(VeQItem *item)
 {
 	Q_ASSERT(item->itemParent() == mRoot);
-	if (item->getState() != VeQItem::Offline || item->itemChild(0) != 0)
-		return;
-	mIncompatibleServices.insert(item->id());
-	onDBusItemAdded(item);
-	item->produceValue(QVariant(), VeQItem::Synchronized);
+	if (item->getState() == VeQItem::Offline && item->itemChild(0) == 0) {
+		mIncompatibleServices.insert(item->id());
+		onDBusItemAdded(item);
+		item->produceValue(QVariant(), VeQItem::Synchronized);
+	}
+	if (mInitCount > 0 && mFavoritesModel == nullptr) {
+		--mInitCount;
+		if (mInitCount == 0)
+			mFavoritesModel = new FavoritesListModel(mRoot, this);
+	}
 }

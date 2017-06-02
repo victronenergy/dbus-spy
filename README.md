@@ -19,6 +19,9 @@ the current value. The values will be updated in realtime. It is also possible t
 * enter: edit the value of the current property
 * t: switch between property values and text
 * q: quit the apllication. ctrl-c will do the same job
+* f: add the current item to the list of favorites. The item will light up after it has been added.
+  Press 'f' again to remove it from the list.
+* F: switch to/from the favorites list.
 
 ## Compilation
 
