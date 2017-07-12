@@ -114,7 +114,7 @@ void ObjectListModel::addItems(VeQItem *item)
 	if (item->getState() != VeQItem::Offline)
 		insertItem(item);
 	if (item->isLeaf()) {
-		Q_ASSERT(item->children().isEmpty());
+		Q_ASSERT(item->itemChildren().isEmpty());
 		return;
 	}
 	connect(item, SIGNAL(childAdded(VeQItem *)),
@@ -169,7 +169,7 @@ void ObjectListModel::disconnectItems(VeQItem *item)
 	disconnect(item, SIGNAL(stateChanged(VeQItem *, State)),
 			   this, SLOT(onItemStateChanged(VeQItem *)));
 	if (item->isLeaf()) {
-		Q_ASSERT(item->children().isEmpty());
+		Q_ASSERT(item->itemChildren().isEmpty());
 		return;
 	}
 	disconnect(item, SIGNAL(childAdded(VeQItem *)),
