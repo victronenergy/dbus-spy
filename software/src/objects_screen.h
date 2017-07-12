@@ -18,6 +18,8 @@ public:
 	ObjectsScreen(const QString &title, AbstractObjectListModel *model,
 				  FavoritesListModel *favorites, QObject *parent = 0);
 
+	virtual ~ObjectsScreen();
+
 	virtual bool handleInput(int c);
 
 	void repaint();

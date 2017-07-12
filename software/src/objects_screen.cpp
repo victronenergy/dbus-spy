@@ -25,6 +25,12 @@ ObjectsScreen::ObjectsScreen(const QString &title, AbstractObjectListModel *mode
 	refresh();
 }
 
+ObjectsScreen::~ObjectsScreen()
+{
+	delwin(mTitleWindow);
+	delwin(mListViewWindow);
+}
+
 bool ObjectsScreen::handleInput(int c)
 {
 	if (mEditForm == nullptr)
