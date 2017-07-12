@@ -20,6 +20,8 @@ public:
 
 	virtual bool handleInput(int c);
 
+	void repaint();
+
 signals:
 	void goBack();
 

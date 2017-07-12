@@ -30,6 +30,9 @@ bool ServicesScreen::handleInput(int c)
 {
 	switch (c)
 	{
+	case 'r':
+		repaint();
+		return true;
 	case KEY_RIGHT:
 	case KEY_ENTER:
 	case '\n':
@@ -43,4 +46,11 @@ bool ServicesScreen::handleInput(int c)
 	default:
 		return mListView->handleInput(c);
 	}
+}
+
+void ServicesScreen::repaint()
+{
+	wrefresh(mTitleWindow);
+	mListView->redraw();
+	wrefresh(mListViewWindow);
 }

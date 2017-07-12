@@ -34,6 +34,9 @@ bool ObjectsScreen::handleInput(int c)
 		case KEY_LEFT:
 			emit goBack();
 			return true;
+		case 'r':
+			repaint();
+			return true;
 		case KEY_ENTER:
 		case '\n':
 			startEdit("Edit value: ", mListView->getValue(mListView->getSelection()));
@@ -118,6 +121,14 @@ bool ObjectsScreen::handleInput(int c)
 		}
 		return true;
 	}
+}
+
+void ObjectsScreen::repaint()
+{
+	wrefresh(mTitleWindow);
+	wclear(mListViewWindow);
+	mListView->redraw();
+	wrefresh(mListViewWindow);
 }
 
 QString ObjectsScreen::getEditValue() const
