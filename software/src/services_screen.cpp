@@ -51,6 +51,7 @@ bool ServicesScreen::handleInput(int c)
 void ServicesScreen::repaint()
 {
 	wrefresh(mTitleWindow);
+	wclear(mListViewWindow);
 	mListView->redraw();
 	wrefresh(mListViewWindow);
 }
