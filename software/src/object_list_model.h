@@ -48,7 +48,7 @@ private:
 
 	void addItems(VeQItem *item);
 
-	void insertItem(VeQItem *item);
+	bool tryInsertItem(VeQItem *item);
 
 	void removeItem(VeQItem *item);
 

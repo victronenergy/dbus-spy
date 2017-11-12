@@ -89,12 +89,17 @@ void ObjectListModel::onChildRemoved(VeQItem *item)
 
 void ObjectListModel::onItemStateChanged(VeQItem *item)
 {
-	if (item->getState() == VeQItem::Requested)
-		return;
-	if (item->getState() == VeQItem::Offline)
+	switch (item->getState()) {
+	case VeQItem::Requested:
+		// Do nothing
+		break;
+	case VeQItem::Offline:
 		removeItem(item);
-	else if (item->getState() != VeQItem::Requested)
-		insertItem(item);
+		break;
+	default:
+		tryInsertItem(item);
+		break;
+	}
 }
 
 void ObjectListModel::updateRoot()
@@ -111,8 +116,7 @@ void ObjectListModel::addItems(VeQItem *item)
 	Q_ASSERT(!mItems.contains(item));
 	connect(item, SIGNAL(stateChanged(VeQItem *, State)),
 			this, SLOT(onItemStateChanged(VeQItem *)));
-	if (item->getState() != VeQItem::Offline)
-		insertItem(item);
+	tryInsertItem(item);
 	if (item->isLeaf()) {
 		Q_ASSERT(item->itemChildren().isEmpty());
 		return;
@@ -131,16 +135,18 @@ void ObjectListModel::addItems(VeQItem *item)
 	}
 }
 
-void ObjectListModel::insertItem(VeQItem *item)
+bool ObjectListModel::tryInsertItem(VeQItem *item)
 {
 	if (item == nullptr)
-		return;
+		return false;
 	if (!item->isLeaf() && mRecursive)
-		return;
+		return false;
 	if (item == mRoot)
-		return;
+		return false;
+	if (item->getState() == VeQItem::Offline || item->getState() == VeQItem::Requested)
+		return false;
 	if (mItems.contains(item))
-		return;
+		return false;
 	QString uid = item->uniqueId();
 	int r = 0;
 	for (;r<mItems.size(); ++r) {
@@ -150,6 +156,7 @@ void ObjectListModel::insertItem(VeQItem *item)
 	beginInsertRows(QModelIndex(), r, r);
 	mItems.insert(r, item);
 	endInsertRows();
+	return true;
 }
 
 void ObjectListModel::removeItem(VeQItem *item)
