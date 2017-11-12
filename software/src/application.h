@@ -46,7 +46,6 @@ private:
 	QSet<QString> mIncompatibleServices;
 	QString mPrevPath;
 	bool mUseIntrospect = false;
-	int mInitCount = 0;
 };
 
 #endif // APPLICATION_H

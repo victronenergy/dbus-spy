@@ -88,9 +88,10 @@ int Application::init()
 			break;
 		connect(item, SIGNAL(stateChanged(VeQItem *, State)),
 				this, SLOT(onStateChanged(VeQItem *)));
-		++mInitCount;
 	}
 	connect(mRoot, SIGNAL(childAdded(VeQItem *)), this, SLOT(onDBusItemAdded(VeQItem *)));
+
+	mFavoritesModel = new FavoritesListModel{mRoot, this};
 
 	initscr();
 	start_color();
@@ -234,10 +235,5 @@ void Application::onStateChanged(VeQItem *item)
 		mIncompatibleServices.insert(item->id());
 		onDBusItemAdded(item);
 		item->produceValue(QVariant(), VeQItem::Synchronized);
-	}
-	if (mInitCount > 0 && mFavoritesModel == nullptr) {
-		--mInitCount;
-		if (mInitCount == 0)
-			mFavoritesModel = new FavoritesListModel{mRoot, this};
 	}
 }
