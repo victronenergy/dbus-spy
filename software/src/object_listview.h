@@ -41,6 +41,8 @@ private slots:
 private:
 	VeQItem *getItem(int index) const;
 
+	void registerItem(VeQItem *item) const;
+
 	static QString convertVariant(const QVariant &value);
 
 	mutable QList<VeQItem *> mItems;

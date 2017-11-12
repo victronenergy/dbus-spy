@@ -55,8 +55,13 @@ void ObjectListView::drawRow(int index, int width) const
 	line.reserve(width);
 	line = model()->getItemName(item);
 	QString text;
-	if (item->isLeaf())
+	if (item->isLeaf()) {
 		text = mShowText ? item->getText() : convertVariant(item->getValue());
+	} else {
+		VeQItem *productName = item->itemGetOrCreate("ProductName");
+		registerItem(productName);
+		text = productName->getValue().toString();
+	}
 	int gapSize = qMax(1, width - text.size() - line.size());
 	for (int i=0; i<gapSize; ++i)
 		line.append(' ');
@@ -98,6 +103,14 @@ void ObjectListView::onDestroyed()
 void ObjectListView::updateItem(VeQItem *item)
 {
 	int i = model()->indexOf(item);
+	if (i == -1) {
+		// Check if this is a ProductName item representing its service.
+		VeQItem *parent = item->itemParent();
+		if (parent != nullptr)
+			i = model()->indexOf(parent);
+	}
+	if (i == -1)
+		return;
 	redrawRows(i, i);
 	wrefresh(window());
 }
@@ -106,13 +119,18 @@ VeQItem *ObjectListView::getItem(int index) const
 {
 	ObjectListModel *m = static_cast<ObjectListModel *>(model());
 	VeQItem *item = m->getItem(index);
+	registerItem(item);
+	return item;
+}
+
+void ObjectListView::registerItem(VeQItem *item) const
+{
 	if (mItems.contains(item))
-		return item;
+		return;
 	connect(item, SIGNAL(valueChanged(VeQItem *, QVariant)), this, SLOT(onValueChanged()));
 	connect(item, SIGNAL(textChanged(VeQItem *, QString)), this, SLOT(onTextChanged()));
 	connect(item, SIGNAL(destroyed()), this, SLOT(onDestroyed()));
 	mItems.append(item);
-	return item;
 }
 
 QString ObjectListView::convertVariant(const QVariant &value)
