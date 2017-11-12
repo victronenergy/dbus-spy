@@ -22,7 +22,7 @@ public:
 
 	virtual int setValue(QVariant const &value)
 	{
-		int i = setValue(value);
+		int i = BaseClass::setValue(value);
 		if (i != 0)
 			return i;
 		BaseClass::setState(VeQItem::Synchronized);
@@ -76,7 +76,7 @@ int Application::init()
 
 	QString dbusAddress = args.contains("dbus") ? args.value("dbus") : "system";
 
-	auto producer = new CustomQItemProducer<VeQItemDbusProducer, VeQItemDbus>{VeQItems::getRoot(), "dbus", true, true, this};
+	auto producer = new CustomQItemProducer<VeQItemDbusProducer, NoStorageQItem<VeQItemDbus>>{VeQItems::getRoot(), "dbus", true, true, this};
 	producer->open(dbusAddress);
 	mRoot = producer->services();
 	// We need som extra code here to catch the com.victronenergy.settings service, because it does
