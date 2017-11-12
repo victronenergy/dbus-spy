@@ -1,4 +1,5 @@
 #include <velib/qt/ve_qitem.hpp>
+#include <QtAlgorithms>
 #include "object_list_model.h"
 
 ObjectListModel::ObjectListModel(VeQItem *root, bool recursive, QObject *parent):
@@ -127,12 +128,8 @@ void ObjectListModel::addItems(VeQItem *item)
 			this, SLOT(onChildRemoved(VeQItem *)));
 	if (item != mRoot && !mRecursive)
 		return;
-	for (int i = 0; ; ++i) {
-		VeQItem *child = item->itemChild(i);
-		if (child == 0)
-			break;
+	for (VeQItem *child: item->itemChildren())
 		addItems(child);
-	}
 }
 
 bool ObjectListModel::tryInsertItem(VeQItem *item)
@@ -147,12 +144,8 @@ bool ObjectListModel::tryInsertItem(VeQItem *item)
 		return false;
 	if (mItems.contains(item))
 		return false;
-	QString uid = item->uniqueId();
-	int r = 0;
-	for (;r<mItems.size(); ++r) {
-		if (mItems[r]->uniqueId() > uid)
-			break;
-	}
+	int r = qLowerBound(mItems.begin(), mItems.end(), item,
+		[](VeQItem *i0, VeQItem *i1) { return i0->uniqueId() < i1->uniqueId(); }) - mItems.begin();
 	beginInsertRows(QModelIndex(), r, r);
 	mItems.insert(r, item);
 	endInsertRows();
@@ -185,10 +178,6 @@ void ObjectListModel::disconnectItems(VeQItem *item)
 			   this, SLOT(onChildRemoved(VeQItem *)));
 	if (item != mRoot && !mRecursive)
 		return;
-	for (int i=0;;++i) {
-		VeQItem *child = item->itemChild(i);
-		if (child == nullptr)
-			break;
+	for (VeQItem *child: item->itemChildren())
 		disconnectItems(child);
-	}
 }
