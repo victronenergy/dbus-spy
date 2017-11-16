@@ -1,6 +1,7 @@
 #ifndef DBUSOBJECTMODEL_H
 #define DBUSOBJECTMODEL_H
 
+#include <QSet>
 #include "abstract_object_list_model.h"
 
 class ObjectListModel : public AbstractObjectListModel
@@ -57,6 +58,7 @@ private:
 	VeQItem *mRoot = nullptr;
 	bool mRecursive = false;
 	QList<VeQItem *> mItems;
+	QSet<VeQItem *> mConnectedItems;
 };
 
 #endif // DBUSOBJECTMODEL_H

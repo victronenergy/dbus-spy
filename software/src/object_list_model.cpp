@@ -86,11 +86,15 @@ void ObjectListModel::onChildAdded(VeQItem *item)
 void ObjectListModel::onChildRemoved(VeQItem *item)
 {
 	removeItem(item);
+	disconnectItems(item);
 }
 
 void ObjectListModel::onItemStateChanged(VeQItem *item)
 {
 	switch (item->getState()) {
+	case VeQItem::Synchronized:
+		addItems(item);
+		break;
 	case VeQItem::Requested:
 		// Do nothing
 		break;
@@ -114,18 +118,25 @@ void ObjectListModel::addItems(VeQItem *item)
 {
 	if (item == nullptr)
 		return;
-	Q_ASSERT(!mItems.contains(item));
-	connect(item, SIGNAL(stateChanged(VeQItem *, State)),
-			this, SLOT(onItemStateChanged(VeQItem *)));
+	if (mItems.contains(item))
+		return;
+	bool connected = mConnectedItems.contains(item);
+	if (!connected) {
+		mConnectedItems.insert(item);
+		connect(item, SIGNAL(stateChanged(VeQItem *, State)),
+				this, SLOT(onItemStateChanged(VeQItem *)));
+	}
 	tryInsertItem(item);
 	if (item->isLeaf()) {
 		Q_ASSERT(item->itemChildren().isEmpty());
 		return;
 	}
-	connect(item, SIGNAL(childAdded(VeQItem *)),
-			this, SLOT(onChildAdded(VeQItem *)));
-	connect(item, SIGNAL(childAboutToBeRemoved(VeQItem *)),
-			this, SLOT(onChildRemoved(VeQItem *)));
+	if (!connected) {
+		connect(item, SIGNAL(childAdded(VeQItem *)),
+				this, SLOT(onChildAdded(VeQItem *)));
+		connect(item, SIGNAL(childAboutToBeRemoved(VeQItem *)),
+				this, SLOT(onChildRemoved(VeQItem *)));
+	}
 	if (item != mRoot && !mRecursive)
 		return;
 	for (VeQItem *child: item->itemChildren())
@@ -166,6 +177,7 @@ void ObjectListModel::disconnectItems(VeQItem *item)
 {
 	if (item == nullptr)
 		return;
+	mConnectedItems.remove(item);
 	disconnect(item, SIGNAL(stateChanged(VeQItem *, State)),
 			   this, SLOT(onItemStateChanged(VeQItem *)));
 	if (item->isLeaf()) {
