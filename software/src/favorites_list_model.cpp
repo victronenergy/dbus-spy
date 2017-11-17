@@ -21,6 +21,7 @@ FavoritesListModel::FavoritesListModel(VeQItem *root, QObject *parent):
 			++i;
 			mItems.insert(i, item);
 		}
+		connectItem(item);
 	}
 	mSettings->endArray();
 	// @todo EV What if VeQItem is destroyed or goes offline?
@@ -84,6 +85,7 @@ void FavoritesListModel::addItem(VeQItem *item)
 		mItems.insert(i, item);
 		endInsertRows();
 	}
+	connectItem(item);
 	adjustSettings();
 }
 
@@ -106,6 +108,7 @@ void FavoritesListModel::removeItem(VeQItem *item)
 	for (;j > i; --j)
 		mItems.removeAt(i);
 	endRemoveRows();
+	disconnectItem(item);
 	adjustSettings();
 }
 
@@ -117,6 +120,15 @@ bool FavoritesListModel::hasItem(VeQItem *item) const
 bool FavoritesListModel::isServiceRoot(VeQItem *item) const
 {
 	return item->itemParent() == mRoot;
+}
+
+void FavoritesListModel::onItemStateChanged(VeQItem *item)
+{
+	if (item->getState() == VeQItem::Idle) {
+		// We get here when a D-Bus service is restarted. When the service is stopped state changes
+		// to Offline, when it is created again, state changes to Idle.
+		item->getValue();
+	}
 }
 
 void FavoritesListModel::adjustSettings()
@@ -136,6 +148,20 @@ void FavoritesListModel::adjustSettings()
 		}
 	}
 	mSettings->endArray();
+}
+
+void FavoritesListModel::connectItem(VeQItem *item)
+{
+	if (item->getState() == VeQItem::Idle)
+		item->getValue();
+	connect(item, SIGNAL(stateChanged(VeQItem *, State)),
+			this, SLOT(onItemStateChanged(VeQItem *)));
+}
+
+void FavoritesListModel::disconnectItem(VeQItem *item)
+{
+	disconnect(item, SIGNAL(stateChanged(VeQItem *, State)),
+			   this, SLOT(onItemStateChanged(VeQItem *)));
 }
 
 VeQItem *FavoritesListModel::getServiceRoot(VeQItem *item) const

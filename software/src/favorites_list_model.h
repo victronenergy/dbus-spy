@@ -31,8 +31,15 @@ public:
 
 	bool isServiceRoot(VeQItem *item) const;
 
+private slots:
+	void onItemStateChanged(VeQItem *item);
+
 private:
 	void adjustSettings();
+
+	void connectItem(VeQItem *item);
+
+	void disconnectItem(VeQItem *item);
 
 	VeQItem *getServiceRoot(VeQItem *item) const;
 

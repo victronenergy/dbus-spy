@@ -92,6 +92,9 @@ void ObjectListModel::onChildRemoved(VeQItem *item)
 void ObjectListModel::onItemStateChanged(VeQItem *item)
 {
 	switch (item->getState()) {
+	case VeQItem::Idle:
+		item->getValue();
+		break;
 	case VeQItem::Synchronized:
 		addItems(item);
 		break;
@@ -102,7 +105,6 @@ void ObjectListModel::onItemStateChanged(VeQItem *item)
 		removeItem(item);
 		break;
 	default:
-		tryInsertItem(item);
 		break;
 	}
 }
@@ -123,6 +125,8 @@ void ObjectListModel::addItems(VeQItem *item)
 	bool connected = mConnectedItems.contains(item);
 	if (!connected) {
 		mConnectedItems.insert(item);
+		if (item->getState() == VeQItem::Idle)
+			item->getValue();
 		connect(item, SIGNAL(stateChanged(VeQItem *, State)),
 				this, SLOT(onItemStateChanged(VeQItem *)));
 	}
