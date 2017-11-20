@@ -38,11 +38,9 @@ As of this moment you need to use version 1.40.
 
 ## Some ceveats
 
-* There is an issue with some of the python services that do not fully conform with the Victron
+* There is an issue with some of the services that do not fully conform with the Victron
   standard: they will no supply a dictionary of all values when a GetValue method is called on the
-  root element (the localsettings application which provided com.victronenergy.settings is the most
-  important one. This makes initialization of the propertylist very slow. If you need to access such
-  a service, use the --introspect option on startup.
+  root element. The content if these services will not be shown.
 * The application is written in C++ and uses the QT framework for D-Bus communication. However,
   the GUI is done using ncurses. The reason for this odd combination is that dbus-spy started as
   a QT+QML application running on PC linux. Someday I decided that being able to run the application
@@ -54,5 +52,7 @@ As of this moment you need to use version 1.40.
 * Changing values on D-Bus services may be dangerous. Only do this if you know what you are doing.
 * The screen will not be redrawn when the size of the terminal changes. So chose it wisely before
   starting the application.
-* Sometimes parts of the screen are not redrawn properly, especially when changing quickly between
-  several services.
+* There is a problem with the 'favorites': if dbus-spy is started with favorites pointing to
+  a service that does not exist yet may, they may never show a value. If this happens, restarting
+  dbus-spy is the only option. The problem seems to be that in this case the VeQItem is marked with
+  'request value when online' when the service is created, but the flag is never checked again.
