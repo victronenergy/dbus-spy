@@ -15,7 +15,7 @@ ServicesScreen::ServicesScreen(VeQItem *root, QObject *parent):
 
 	mListViewWindow = newwin(getmaxy(stdscr) - 2, getmaxx(stdscr), 1, 0);
 	keypad(mListViewWindow, true);
-	auto model = new ObjectListModel{root, false, this};
+	auto model = new ObjectListModel{root, false, true, this};
 	mListView = new ObjectListView{model, mListViewWindow, this};
 	refresh();
 }

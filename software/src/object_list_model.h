@@ -10,7 +10,8 @@ class ObjectListModel : public AbstractObjectListModel
 	Q_PROPERTY(QString path READ path WRITE setPath NOTIFY pathChanged)
 	Q_PROPERTY(bool recursive READ recursive WRITE setRecursive NOTIFY recursiveChanged)
 public:
-	ObjectListModel(VeQItem *root = 0, bool recursive = false, QObject *parent = 0);
+	ObjectListModel(VeQItem *root = 0, bool recursive = false, bool showHistory = false,
+					QObject *parent = 0);
 
 	QString path() const;
 
@@ -57,6 +58,7 @@ private:
 
 	VeQItem *mRoot = nullptr;
 	bool mRecursive = false;
+	bool mShowHistory = false;
 	QList<VeQItem *> mItems;
 	QSet<VeQItem *> mConnectedItems;
 };

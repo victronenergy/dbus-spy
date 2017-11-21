@@ -2,10 +2,11 @@
 #include <QtAlgorithms>
 #include "object_list_model.h"
 
-ObjectListModel::ObjectListModel(VeQItem *root, bool recursive, QObject *parent):
+ObjectListModel::ObjectListModel(VeQItem *root, bool recursive, bool showHistory, QObject *parent):
 	AbstractObjectListModel(parent),
 	mRoot(root),
-	mRecursive(recursive)
+	mRecursive(recursive),
+	mShowHistory(showHistory)
 {
 	updateRoot();
 }
@@ -119,6 +120,8 @@ void ObjectListModel::updateRoot()
 void ObjectListModel::addItems(VeQItem *item)
 {
 	if (item == nullptr)
+		return;
+	if (!mShowHistory && item->getRelId(mRoot).startsWith("/History"))
 		return;
 	if (mItems.contains(item))
 		return;

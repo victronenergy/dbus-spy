@@ -64,6 +64,7 @@ int Application::init()
 	args.addArg("-v --version", "Show version");
 	args.addArg("-h --help", "Show help");
 	args.addArg("-i --introspect", "Use introspect to build a tree of the pesky services support GetValue on the root");
+	args.addArg("-r --history", "Show items whose path starts with 'History'.");
 	if (args.contains("h") || args.contains("help")) {
 		args.help();
 		return -1;
@@ -73,6 +74,7 @@ int Application::init()
 		return -1;
 	}
 	mUseIntrospect = args.contains("i") || args.contains("introspect");
+	mShowHistory = args.contains("r") || args.contains("history");
 
 	QString dbusAddress = args.contains("dbus") ? args.value("dbus") : "system";
 
@@ -202,7 +204,7 @@ void Application::onServiceSelected(VeQItem *serviceRoot)
 		mFavorites = nullptr;
 	}
 	Q_ASSERT(mObjects == nullptr);
-	auto model = new ObjectListModel{serviceRoot, true};
+	auto model = new ObjectListModel{serviceRoot, true, mShowHistory};
 	mPrevPath = serviceRoot->uniqueId();
 	mObjects = new ObjectsScreen{serviceRoot->id(), model, mFavoritesModel, this};
 	model->setParent(mObjects);
