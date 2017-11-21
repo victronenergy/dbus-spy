@@ -56,3 +56,6 @@ As of this moment you need to use version 1.40.
   a service that does not exist yet may, they may never show a value. If this happens, restarting
   dbus-spy is the only option. The problem seems to be that in this case the VeQItem is marked with
   'request value when online' when the service is created, but the flag is never checked again.
+* Another bug: on some systems (especially venus), items marked as favorites are not shown as
+  such. These items are drawn with the 'bold' flag enabled, but are sometimes rendered as 'normal'
+  items.
