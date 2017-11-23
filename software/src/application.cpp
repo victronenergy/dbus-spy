@@ -98,8 +98,8 @@ int Application::init()
 	initscr();
 	start_color();
 	init_pair(1, COLOR_WHITE, COLOR_MAGENTA); // Title bar
-	init_pair(2, COLOR_BLACK, COLOR_CYAN); // Selected
-	init_pair(3, COLOR_WHITE, COLOR_CYAN); // Selected and favorite
+	init_pair(2, COLOR_WHITE, COLOR_BLACK); // normal text
+	init_pair(3, COLOR_CYAN, COLOR_BLACK); // selected text
 	cbreak();
 	noecho();
 	keypad(stdscr, TRUE);

@@ -162,9 +162,8 @@ void ListView::_redrawRow(int index)
 	int r = index - mStartIndex;
 	if (r >= getListHeight())
 		return;
-	bool bold = isEmphasized(index);
-	int attr = index == mSelectionIndex ? (bold ? COLOR_PAIR(3) : COLOR_PAIR(2)) : 0;
-	if (bold)
+	int attr = index == mSelectionIndex ? (COLOR_PAIR(3) | A_STANDOUT) : COLOR_PAIR(2);
+	if (isEmphasized(index))
 		attr |= A_BOLD;
 	wattron(mWindow, attr);
 	wmove(mWindow, r, 0);
