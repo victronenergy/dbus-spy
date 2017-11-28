@@ -11,6 +11,14 @@ FavoritesListModel::FavoritesListModel(VeQItem *root, QObject *parent):
 	for (int index = 0; index < size; ++index) {
 		mSettings->setArrayIndex(index);
 		QString path = mSettings->value("path").toString();
+		// Workaround: do not create items if the underlying D-Bus service is not present (yet).
+		QString serviceName = path.section('/', 1, 1);
+		VeQItem *service = root->itemGet(serviceName);
+		if (service == nullptr) {
+			mPendingPaths.append(path);
+			continue;
+		}
+
 		VeQItem *item = root->itemGetOrCreate(path);
 		VeQItem *itemRoot = getServiceRoot(item);
 		int i = mItems.indexOf(itemRoot);
@@ -24,7 +32,7 @@ FavoritesListModel::FavoritesListModel(VeQItem *root, QObject *parent):
 		connectItem(item);
 	}
 	mSettings->endArray();
-	// @todo EV What if VeQItem is destroyed or goes offline?
+	connect(root, SIGNAL(childAdded(VeQItem *)), this, SLOT(onServiceAdded(VeQItem *)));
 }
 
 VeQItem *FavoritesListModel::getItem(int index) const
@@ -120,6 +128,20 @@ bool FavoritesListModel::hasItem(VeQItem *item) const
 bool FavoritesListModel::isServiceRoot(VeQItem *item) const
 {
 	return item->itemParent() == mRoot;
+}
+
+void FavoritesListModel::onServiceAdded(VeQItem *item)
+{
+	QString serviceName = item->id();
+	for (auto it = mPendingPaths.begin(); it != mPendingPaths.end();) {
+		if (it->section('/', 1, 1) == serviceName) {
+			VeQItem *item = mRoot->itemGetOrCreate(*it);
+			addItem(item);
+			it = mPendingPaths.erase(it);
+		} else {
+			++it;
+		}
+	}
 }
 
 void FavoritesListModel::onItemStateChanged(VeQItem *item)

@@ -32,6 +32,8 @@ public:
 	bool isServiceRoot(VeQItem *item) const;
 
 private slots:
+	void onServiceAdded(VeQItem *item);
+
 	void onItemStateChanged(VeQItem *item);
 
 private:
@@ -44,6 +46,18 @@ private:
 	VeQItem *getServiceRoot(VeQItem *item) const;
 
 	QList<VeQItem *> mItems;
+	// Workaround for a problem in VeQItems: if an item pointing to an object within a D-Bus service
+	// is created (using itemGetOrCreate), the function VeQItemDBus::attachRootItem will be called,
+	// when the VeQItem representing the service is created. This seems to have no effect.
+	// This does not have the desired effect if the D-Bus service does not exist yet. If the service
+	// appears later on, attachRootItem is not called again. This means that the objects within the
+	// service will not be retrieved using a GetValue of the service root. So, the service itself is
+	// present in the tree, but most of its child objects are missing.
+	// This problem may occur when starting the application with a number of stored favorites.
+	// So before creating a VeQItem from a stored path, we check if the corresponding D-Bus service
+	// exists. If not, the path is stored in mPendingPaths and the item will be created after the
+	// D-Bus service has appeared.
+	QStringList mPendingPaths;
 	VeQItem *mRoot = nullptr;
 	QSettings *mSettings = nullptr;
 };
