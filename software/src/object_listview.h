@@ -36,6 +36,8 @@ private slots:
 
 	void onTextChanged();
 
+	void onStateChanged();
+
 	void onDestroyed();
 
 private:

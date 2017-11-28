@@ -56,7 +56,8 @@ void ObjectListView::drawRow(int index, int width) const
 	line = model()->getItemName(item);
 	QString text;
 	if (item->isLeaf()) {
-		text = mShowText ? item->getText() : convertVariant(item->getValue());
+		if (item->getState() != VeQItem::Offline)
+			text = mShowText ? item->getText() : convertVariant(item->getValue());
 	} else {
 		VeQItem *productName = item->itemGetOrCreate("ProductName");
 		registerItem(productName);
@@ -95,6 +96,11 @@ void ObjectListView::onTextChanged()
 		updateItem(static_cast<VeQItem *>(sender()));
 }
 
+void ObjectListView::onStateChanged()
+{
+	updateItem(static_cast<VeQItem *>(sender()));
+}
+
 void ObjectListView::onDestroyed()
 {
 	mItems.removeOne(static_cast<VeQItem *>(sender()));
@@ -129,6 +135,7 @@ void ObjectListView::registerItem(VeQItem *item) const
 		return;
 	connect(item, SIGNAL(valueChanged(VeQItem *, QVariant)), this, SLOT(onValueChanged()));
 	connect(item, SIGNAL(textChanged(VeQItem *, QString)), this, SLOT(onTextChanged()));
+	connect(item, SIGNAL(stateChanged(VeQItem *, State)), this, SLOT(onStateChanged()));
 	connect(item, SIGNAL(destroyed()), this, SLOT(onDestroyed()));
 	mItems.append(item);
 }
