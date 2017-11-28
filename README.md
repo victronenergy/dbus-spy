@@ -52,10 +52,3 @@ As of this moment you need to use version 1.40.
 * Changing values on D-Bus services may be dangerous. Only do this if you know what you are doing.
 * The screen will not be redrawn when the size of the terminal changes. So chose it wisely before
   starting the application.
-* There is a problem with the 'favorites': if dbus-spy is started with favorites pointing to
-  a service that does not exist yet may, they may never show a value. If this happens, restarting
-  dbus-spy is the only option. The problem seems to be that in this case the VeQItem is marked with
-  'request value when online' when the service is created, but the flag is never checked again.
-* Another bug: on some systems (especially venus), items marked as favorites are not shown as
-  such. These items are drawn with the 'bold' flag enabled, but are sometimes rendered as 'normal'
-  items.
