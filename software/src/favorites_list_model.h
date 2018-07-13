@@ -3,6 +3,7 @@
 
 #include "abstract_object_list_model.h"
 #include <QList>
+#include <QStringList>
 
 class QSettings;
 class VeQItem;
