@@ -1,25 +1,32 @@
 #include <QDebug>
+#include <QtGlobal>
 #include "application.h"
 
 #include "signal_handler.h"
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+void myMessageOutput(QtMsgType type, const QMessageLogContext &ctx, const QString &msg)
+{
+	Q_UNUSED(type);
+	Q_UNUSED(ctx);
+	Q_UNUSED(msg);
+}
+#else
 void myMessageOutput(QtMsgType type, const char *msg)
 {
 	Q_UNUSED(type);
 	Q_UNUSED(msg);
 }
+#endif
 
-//void myMessageOutput(QtMsgType type, const QMessageLogContext &ctx, const QString &msg)
-//{
-//	Q_UNUSED(type);
-//	Q_UNUSED(ctx);
-//	Q_UNUSED(msg);
-//}
 
 int main(int argc, char *argv[])
 {
-	// qInstallMessageHandler(myMessageOutput);
+	#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+	qInstallMessageHandler(myMessageOutput);
+	#else
 	qInstallMsgHandler(myMessageOutput);
+	#endif
 
 	Application a{argc, argv};
 
