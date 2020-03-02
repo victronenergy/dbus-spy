@@ -22,11 +22,11 @@ void myMessageOutput(QtMsgType type, const char *msg)
 
 int main(int argc, char *argv[])
 {
-	#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
 	qInstallMessageHandler(myMessageOutput);
-	#else
+#else
 	qInstallMsgHandler(myMessageOutput);
-	#endif
+#endif
 
 	Application a{argc, argv};
 
