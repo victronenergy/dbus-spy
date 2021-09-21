@@ -14,26 +14,20 @@ class VeQItem;
 class Application : public QCoreApplication
 {
 	Q_OBJECT
+
 public:
 	Application(int &argc, char **argv);
-
 	~Application();
 
 	int init();
 
 private slots:
 	void onCursesTimer();
-
 	void onGoBack();
-
 	void onGoToFavorites();
-
 	void onLeaveFavorites();
-
 	void onServiceSelected(VeQItem *serviceRoot);
-
 	void onDBusItemAdded(VeQItem *item);
-
 	void onStateChanged(VeQItem *item);
 
 private:
@@ -49,4 +43,4 @@ private:
 	bool mShowHistory = false;
 };
 
-#endif // APPLICATION_H
+#endif

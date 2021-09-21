@@ -13,11 +13,9 @@ class ServicesScreen : public QObject
 	Q_OBJECT
 public:
 	ServicesScreen(VeQItem *root, QObject *parent = 0);
-
 	~ServicesScreen();
 
 	virtual bool handleInput(int c);
-
 	void repaint();
 
 signals:
@@ -29,4 +27,4 @@ private:
 	ListView *mListView = nullptr;
 };
 
-#endif // SERVICESSCREEN_H
+#endif

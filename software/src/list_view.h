@@ -15,36 +15,25 @@ public:
 	ListView(WINDOW *w, QObject *parent = 0);
 
 	AbstractObjectListModel *model() const;
-
 	void setModel(AbstractObjectListModel *m);
-
 	int getSelection() const;
-
 	void setSelection(int s);
-
 	virtual bool handleInput(int c);
-
 	void redraw();
-
 	void redrawRows(int startIndex, int endIndex);
 
 protected:
 	virtual void drawRow(int index, int width) const;
-
 	virtual bool isEmphasized(int index) const;
-
 	WINDOW *window() const;
 
 private slots:
 	void onDataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight);
-
 	void onRedrawAll();
-
 	void onScheduleRedrawAll();
 
 private:
 	int getListHeight() const;
-
 	void _redrawRow(int index);
 
 	WINDOW *mWindow	= nullptr;
@@ -54,4 +43,4 @@ private:
 	int mSelectionIndex = 0;
 };
 
-#endif // LISTVIEW_H
+#endif

@@ -17,11 +17,9 @@ class ObjectsScreen : public QObject
 public:
 	ObjectsScreen(const QString &title, AbstractObjectListModel *model,
 				  FavoritesListModel *favorites, QObject *parent = 0);
-
 	virtual ~ObjectsScreen();
 
 	virtual bool handleInput(int c);
-
 	void repaint();
 
 signals:
@@ -29,9 +27,7 @@ signals:
 
 private:
 	QString getEditValue() const;
-
 	void startEdit(const QString &description, const QString &text);
-
 	void endEdit();
 
 	WINDOW *mTitleWindow = nullptr;
@@ -43,4 +39,4 @@ private:
 	FORM *mEditForm = nullptr;
 };
 
-#endif // OBJECTSSCREEN_H
+#endif

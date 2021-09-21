@@ -15,35 +15,23 @@ public:
 	FavoritesListModel(VeQItem *root, QObject *parent = 0);
 
 	VeQItem *getItem(int index) const override;
-
 	QString getItemName(VeQItem *item) const override;
-
 	int indexOf(VeQItem *item) const override;
-
 	QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
-
 	int rowCount(const QModelIndex &parent = QModelIndex()) const override;
-
 	void addItem(VeQItem *item);
-
 	void removeItem(VeQItem *item);
-
 	bool hasItem(VeQItem *item) const;
-
 	bool isServiceRoot(VeQItem *item) const;
 
 private slots:
 	void onServiceAdded(VeQItem *item);
-
 	void onItemStateChanged(VeQItem *item);
 
 private:
 	void adjustSettings();
-
 	void connectItem(VeQItem *item);
-
 	void disconnectItem(VeQItem *item);
-
 	VeQItem *getServiceRoot(VeQItem *item) const;
 
 	QList<VeQItem *> mItems;
@@ -63,4 +51,4 @@ private:
 	QSettings *mSettings = nullptr;
 };
 
-#endif // FAVORITES_LIST_MODEL_H
+#endif

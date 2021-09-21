@@ -25,7 +25,6 @@ signals:
 
 private slots:
 	void handleSigTerm();
-
 	static void termSignalHandler(int unused);
 
 private:
@@ -34,4 +33,4 @@ private:
 	QSocketNotifier *snTerm = nullptr;
 };
 
-#endif // SIGNALHANDLER_H
+#endif

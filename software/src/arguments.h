@@ -20,15 +20,13 @@ public:
 	}
 
 	void print();
-
 	void help();
-
 	void version();
-
 	void addArg(const QString &arg, const QString &description);
+
 private:
 	QMap<QString, QString> mArgList;
 	QMap<QString, QString> mHelp;
 };
 
-#endif // ARGUMENTS_H
+#endif
