@@ -30,6 +30,7 @@ CONFIG += console dbus
 CONFIG -= app_bundle
 DEFINES += VERSION=\\\"$${VERSION}\\\"
 QMAKE_CXXFLAGS += -std=c++11 # QT4 only, use CONFIG += c++11 for QT5
+QMAKE_CXX += -Wno-class-memaccess -Wno-deprecated-copy
 
 OBJECTS_DIR = .obj
 MOC_DIR = .moc
