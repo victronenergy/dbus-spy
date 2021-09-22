@@ -45,29 +45,29 @@ INCLUDEPATH += \
     src
 
 SOURCES += \
-    src/main.cpp \
     src/application.cpp \
+    src/arguments.cpp \
     src/favorites_list_model.cpp \
-    src/services_screen.cpp \
-    src/objects_screen.cpp \
     src/list_view.cpp \
-    src/object_listview.cpp \
+    src/main.cpp \
     src/object_list_model.cpp \
+    src/object_listview.cpp \
+    src/objects_screen.cpp \
+    src/services_screen.cpp \
     src/signal_handler.cpp \
-    src/arguments.cpp
 
 HEADERS += \
     src/abstract_object_list_model.h \
     src/application.h \
-    src/favorites_list_model.h \
-    src/services_screen.h \
-    src/objects_screen.h \
-    src/list_view.h \
-    src/object_listview.h \
-    src/object_list_model.h \
-    src/signal_handler.h \
     src/arguments.h \
-    velib/velib_config_app.h
+    src/favorites_list_model.h \
+    src/list_view.h \
+    src/object_list_model.h \
+    src/object_listview.h \
+    src/objects_screen.h \
+    src/services_screen.h \
+    src/signal_handler.h \
+    velib/velib_config_app.h \
 
 DISTFILES += \
     ../README.md
