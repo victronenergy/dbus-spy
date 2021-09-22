@@ -1,10 +1,8 @@
-#include <stdio.h>
-#include <sys/poll.h>
-#include <QDebug>
-#include <QTimer>
+#include <cursesw.h>
+
 #include <velib/qt/ve_qitem.hpp>
 #include <velib/qt/ve_qitems_dbus.hpp>
-#include <ncurses.h>
+
 #include "application.h"
 #include "arguments.h"
 #include "favorites_list_model.h"
@@ -69,6 +67,7 @@ int Application::init()
 	init_pair(3, COLOR_CYAN, COLOR_BLACK); // selected text
 	cbreak();
 	noecho();
+	nodelay(stdscr, TRUE);
 	keypad(stdscr, TRUE);
 	curs_set(0);
 	refresh();
@@ -85,14 +84,12 @@ int Application::init()
 
 void Application::onCursesTimer()
 {
-	pollfd fds;
-	fds.fd = 0; // STDIN
-	fds.events = POLLIN;
 	for (;;) {
-		int ret = poll(&fds, 1, 0);
-		if (ret != 1)
-			return;
-		int c = getch();
+		wint_t c;
+		int status = get_wch(&c);
+		if (status == ERR)
+			break;
+
 		bool handled = false;
 		if (mObjects != nullptr)
 			handled = mObjects->handleInput(c);

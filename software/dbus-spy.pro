@@ -37,7 +37,7 @@ MOC_DIR = .moc
 
 TEMPLATE = app
 
-LIBS += -lform -lncurses
+LIBS += -lformw -lncursesw
 
 include(ext/velib/src/qt/ve_qitems.pri)
 

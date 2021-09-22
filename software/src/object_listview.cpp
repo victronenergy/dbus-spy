@@ -69,7 +69,7 @@ void ObjectListView::drawRow(int index, int width) const
 	int textSize = width - line.size();
 	for (int i=0; i<textSize; ++i)
 		line.append(text[i]);
-	waddstr(window(), line.toLatin1().data());
+	waddstr(window(), line.toUtf8().data());
 }
 
 bool ObjectListView::isEmphasized(int index) const

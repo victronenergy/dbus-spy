@@ -28,7 +28,7 @@ the current value. The values will be updated in realtime. It is also possible t
 
 dbus-spy relies on several external libraries:
 * QT-4.8
-* libncurses and libform5
+* libncursesw and libformw5
 * velib This is the Victron Energy platform library. Unfortunately this library is not available
   as open source. Please contact Victron Energy if you need it.
 

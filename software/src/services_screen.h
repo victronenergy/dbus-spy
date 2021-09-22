@@ -3,7 +3,7 @@
 
 #include <QObject>
 #include <QStringList>
-#include <ncurses.h>
+#include <cursesw.h>
 
 class ListView;
 class VeQItem;
@@ -15,7 +15,7 @@ public:
 	ServicesScreen(VeQItem *root, QObject *parent = 0);
 	~ServicesScreen();
 
-	virtual bool handleInput(int c);
+	virtual bool handleInput(wint_t c);
 	void repaint();
 
 signals:

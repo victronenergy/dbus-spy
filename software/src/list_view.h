@@ -2,7 +2,7 @@
 #define LISTVIEW_H
 
 #include <QObject>
-#include <ncurses.h>
+#include <cursesw.h>
 
 class AbstractObjectListModel;
 class QModelIndex;

@@ -26,7 +26,7 @@ ServicesScreen::~ServicesScreen()
 	delwin(mTitleWindow);
 }
 
-bool ServicesScreen::handleInput(int c)
+bool ServicesScreen::handleInput(wint_t c)
 {
 	switch (c)
 	{

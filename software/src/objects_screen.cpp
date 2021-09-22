@@ -12,7 +12,7 @@ ObjectsScreen::ObjectsScreen(const QString &title, AbstractObjectListModel *mode
 	mTitleWindow = newwin(1, getmaxx(stdscr), 0, 0);
 	wmove(mTitleWindow, 0, 0);
 	wattron(mTitleWindow, COLOR_PAIR(1));
-	wprintw(mTitleWindow, title.toLatin1().data());
+	wprintw(mTitleWindow, title.toUtf8().data());
 	wattroff(mTitleWindow, COLOR_PAIR(1));
 	wrefresh(mTitleWindow);
 
@@ -31,7 +31,7 @@ ObjectsScreen::~ObjectsScreen()
 	delwin(mListViewWindow);
 }
 
-bool ObjectsScreen::handleInput(int c)
+bool ObjectsScreen::handleInput(wint_t c)
 {
 	if (mEditForm == nullptr)
 	{
@@ -119,12 +119,16 @@ bool ObjectsScreen::handleInput(int c)
 			refresh();
 			return true;
 		default:
-			break;
+			form_driver_w(mEditForm, OK, c);
+			wrefresh(mEditWindow);
+			return true;
 		}
+
 		if (c != 0) {
 			form_driver(mEditForm, c);
 			wrefresh(mEditWindow);
 		}
+
 		return true;
 	}
 }
@@ -142,7 +146,7 @@ QString ObjectsScreen::getEditValue() const
 	if (mEditForm == nullptr)
 		return QString{};
 	form_driver(mEditForm, REQ_VALIDATION);
-	QString r = field_buffer(mEditFields[0], 0);
+	QString r = QString::fromUtf8(field_buffer(mEditFields[0], 0));
 	return r.trimmed();
 }
 
@@ -154,7 +158,7 @@ void ObjectsScreen::startEdit(const QString &description, const QString &text)
 	int x0 = description.size();
 	mEditFields[0] = new_field(1, getmaxx(stdscr) - x0, 0, 0, 0, 0);
 	mEditFields[1] = 0;
-	set_field_buffer(mEditFields[0], 0, text.toLatin1().data());
+	set_field_buffer(mEditFields[0], 0, text.toUtf8().data());
 	mEditForm = new_form(mEditFields);
 	int rows = 0;
 	int cols = 0;
@@ -168,7 +172,7 @@ void ObjectsScreen::startEdit(const QString &description, const QString &text)
 	set_current_field(mEditForm, mEditFields[0]);
 	curs_set(1);
 
-	mvprintw(y, 0, description.toLatin1().data());
+	mvprintw(y, 0, description.toUtf8().data());
 	wmove(mEditWindow, 0, 0);
 }
 

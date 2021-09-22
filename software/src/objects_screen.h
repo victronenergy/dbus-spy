@@ -4,7 +4,7 @@
 #include <QObject>
 #include <QStringList>
 #include <form.h>
-#include <ncurses.h>
+#include <cursesw.h>
 
 class AbstractObjectListModel;
 class FavoritesListModel;
@@ -19,7 +19,7 @@ public:
 				  FavoritesListModel *favorites, QObject *parent = 0);
 	virtual ~ObjectsScreen();
 
-	virtual bool handleInput(int c);
+	virtual bool handleInput(wint_t c);
 	void repaint();
 
 signals:
