@@ -55,10 +55,10 @@ int Application::init()
 		VeQItem *item = mRoot->itemChild(i);
 		if (item == nullptr)
 			break;
-		connect(item, SIGNAL(stateChanged(VeQItem *, State)),
-				this, SLOT(onStateChanged(VeQItem *)));
+		connect(item, SIGNAL(stateChanged(VeQItem*,State)),
+				this, SLOT(onStateChanged(VeQItem*)));
 	}
-	connect(mRoot, SIGNAL(childAdded(VeQItem *)), this, SLOT(onDBusItemAdded(VeQItem *)));
+	connect(mRoot, SIGNAL(childAdded(VeQItem*)), this, SLOT(onDBusItemAdded(VeQItem*)));
 
 	mFavoritesModel = new FavoritesListModel{mRoot, this};
 
@@ -78,7 +78,7 @@ int Application::init()
 	mTimer = new QTimer{this};
 	mTimer->setInterval(100);
 	mTimer->start();
-	connect(mTimer, SIGNAL(timeout()), this, SLOT(onCursesTimer()));
+	connect(mTimer, SIGNAL(timeout()), SLOT(onCursesTimer()));
 
 	return 0;
 }
@@ -131,8 +131,8 @@ void Application::onGoBack()
 	}
 	mPrevPath.clear();
 	mServices = new ServicesScreen{mRoot, this};
-	connect(mServices, SIGNAL(serviceSelected(VeQItem *)),
-			this, SLOT(onServiceSelected(VeQItem *)), Qt::QueuedConnection);
+	connect(mServices, SIGNAL(serviceSelected(VeQItem*)),
+			this, SLOT(onServiceSelected(VeQItem*)), Qt::QueuedConnection);
 }
 
 void Application::onGoToFavorites()
@@ -193,7 +193,7 @@ void Application::onDBusItemAdded(VeQItem *item)
 		return;
 	if (item->isLeaf())
 		item->getValue();
-	connect(item, SIGNAL(childAdded(VeQItem *)), this, SLOT(onDBusItemAdded(VeQItem *)));
+	connect(item, SIGNAL(childAdded(VeQItem*)), this, SLOT(onDBusItemAdded(VeQItem*)));
 	static_cast<VeQItemDbus *>(item)->introspect();
 }
 

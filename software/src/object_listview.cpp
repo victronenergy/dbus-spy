@@ -133,9 +133,9 @@ void ObjectListView::registerItem(VeQItem *item) const
 {
 	if (mItems.contains(item))
 		return;
-	connect(item, SIGNAL(valueChanged(VeQItem *, QVariant)), this, SLOT(onValueChanged()));
-	connect(item, SIGNAL(textChanged(VeQItem *, QString)), this, SLOT(onTextChanged()));
-	connect(item, SIGNAL(stateChanged(VeQItem *, State)), this, SLOT(onStateChanged()));
+	connect(item, SIGNAL(valueChanged(VeQItem*,QVariant)), this, SLOT(onValueChanged()));
+	connect(item, SIGNAL(textChanged(VeQItem*,QString)), this, SLOT(onTextChanged()));
+	connect(item, SIGNAL(stateChanged(VeQItem*,State)), this, SLOT(onStateChanged()));
 	connect(item, SIGNAL(destroyed()), this, SLOT(onDestroyed()));
 	mItems.append(item);
 }

@@ -32,7 +32,7 @@ FavoritesListModel::FavoritesListModel(VeQItem *root, QObject *parent):
 		connectItem(item);
 	}
 	mSettings->endArray();
-	connect(root, SIGNAL(childAdded(VeQItem *)), this, SLOT(onServiceAdded(VeQItem *)));
+	connect(root, SIGNAL(childAdded(VeQItem*)), this, SLOT(onServiceAdded(VeQItem*)));
 }
 
 VeQItem *FavoritesListModel::getItem(int index) const
@@ -176,14 +176,14 @@ void FavoritesListModel::connectItem(VeQItem *item)
 {
 	if (item->getState() == VeQItem::Idle)
 		item->getValue();
-	connect(item, SIGNAL(stateChanged(VeQItem *, State)),
-			this, SLOT(onItemStateChanged(VeQItem *)));
+	connect(item, SIGNAL(stateChanged(VeQItem*, State)),
+			this, SLOT(onItemStateChanged(VeQItem*)));
 }
 
 void FavoritesListModel::disconnectItem(VeQItem *item)
 {
-	disconnect(item, SIGNAL(stateChanged(VeQItem *, State)),
-			   this, SLOT(onItemStateChanged(VeQItem *)));
+	disconnect(item, SIGNAL(stateChanged(VeQItem*,State)),
+			   this, SLOT(onItemStateChanged(VeQItem*)));
 }
 
 VeQItem *FavoritesListModel::getServiceRoot(VeQItem *item) const

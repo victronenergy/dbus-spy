@@ -9,7 +9,7 @@ ListView::ListView(WINDOW *w, QObject *parent):
 {
 	mRedrawTimer->setInterval(100);
 	mRedrawTimer->setSingleShot(true);
-	connect(mRedrawTimer, SIGNAL(timeout()), this, SLOT(onRedrawAll()));
+	connect(mRedrawTimer, SIGNAL(timeout()), SLOT(onRedrawAll()));
 }
 
 AbstractObjectListModel *ListView::model() const
@@ -22,13 +22,13 @@ void ListView::setModel(AbstractObjectListModel *m)
 	if (mModel == m)
 		return;
 	mModel = m;
-	connect(mModel, SIGNAL(dataChanged(QModelIndex, QModelIndex)),
-			this, SLOT(onDataChanged(QModelIndex, QModelIndex)));
+	connect(mModel, SIGNAL(dataChanged(QModelIndex,QModelIndex)),
+			this, SLOT(onDataChanged(QModelIndex,QModelIndex)));
 	connect(mModel, SIGNAL(layoutChanged()),
 			this, SLOT(onScheduleRedrawAll()));
-	connect(mModel, SIGNAL(rowsInserted(QModelIndex, int, int)),
+	connect(mModel, SIGNAL(rowsInserted(QModelIndex,int,int)),
 			this, SLOT(onScheduleRedrawAll()));
-	connect(mModel, SIGNAL(rowsRemoved(QModelIndex, int, int)),
+	connect(mModel, SIGNAL(rowsRemoved(QModelIndex,int,int)),
 			this, SLOT(onScheduleRedrawAll()));
 	connect(mModel, SIGNAL(modelReset()),
 			this, SLOT(onScheduleRedrawAll()));
