@@ -46,9 +46,7 @@ int Application::init()
 	auto producer = new VeQItemDbusProducer{VeQItems::getRoot(), "dbus", true, true, this};
 	producer->open(dbusAddress);
 	mRoot = producer->services();
-	// We need som extra code here to catch the com.victronenergy.settings service, because it does
-	// not support a GetValue on the root, which is used by VeQItemDbusProducer to harvest all
-	// existing items in the D-Bus services.
+
 	for (int i=0;;++i) {
 		VeQItem *item = mRoot->itemChild(i);
 		if (item == nullptr)
