@@ -1,5 +1,5 @@
 # Application version
-VERSION = 1.0.0
+VERSION = 1.2.5
 
 # suppress the mangling of va_arg has changed for gcc 4.4
 QMAKE_CXXFLAGS += -Wno-psabi
