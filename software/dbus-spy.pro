@@ -19,6 +19,9 @@ unix {
     target.path = $${DESTDIR}$${bindir}
 }
 
+CONFIG += link_pkgconfig
+PKGCONFIG += ncursesw
+
 MOC_DIR=.moc
 OBJECTS_DIR=.obj
 
@@ -37,7 +40,7 @@ MOC_DIR = .moc
 
 TEMPLATE = app
 
-LIBS += -lformw -lncursesw
+LIBS += -lformw
 
 include(ext/velib/src/qt/ve_qitems.pri)
 
