@@ -87,6 +87,7 @@ bool ObjectsScreen::handleInput(wint_t c)
 			refresh();
 			break;
 		case KEY_BACKSPACE:
+		case 127:
 			c = REQ_DEL_PREV;
 			break;
 		case 0x014A: // delete key?
