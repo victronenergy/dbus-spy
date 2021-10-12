@@ -11,35 +11,6 @@ ObjectListModel::ObjectListModel(VeQItem *root, bool recursive, bool showHistory
 	updateRoot();
 }
 
-QString ObjectListModel::path() const
-{
-	return mRoot == nullptr ? QString{} : mRoot->uniqueId();
-}
-
-void ObjectListModel::setPath(const QString &path)
-{
-	QString oldPath = mRoot == nullptr ? QString{} : mRoot->uniqueId();
-	if (oldPath == path)
-		return;
-	mRoot = VeQItems::getRoot()->itemGet(path);
-	updateRoot();
-	emit pathChanged();
-}
-
-bool ObjectListModel::recursive() const
-{
-	return mRecursive;
-}
-
-void ObjectListModel::setRecursive(bool r)
-{
-	if (mRecursive == r)
-		return;
-	mRecursive = r;
-	updateRoot();
-	emit recursiveChanged();
-}
-
 QVariant ObjectListModel::data(const QModelIndex &index, int role) const
 {
 	Q_UNUSED(role)
