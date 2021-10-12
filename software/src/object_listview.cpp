@@ -160,7 +160,7 @@ QString ObjectListView::convertVariant(const QVariant &value)
 	{
 		QList<QVariant> list = value.toList();
 		QString r = "[";
-		for (QVariant v: list)
+		for (QVariant &v: list)
 		{
 			r.append(convertVariant(v));
 			r.append(',');
@@ -175,7 +175,7 @@ QString ObjectListView::convertVariant(const QVariant &value)
 		QMap<QString, QVariant> map = value.toMap();
 		QString r = "{";
 		for (auto it = map.begin(); it != map.end(); ++it)
-			r.append(QString("'%1': %2,").arg(it.key()).arg(convertVariant(it.value())));
+			r.append(QString("'%1': %2,").arg(it.key(), convertVariant(it.value())));
 		if (r.size() > 1)
 			r.chop(1);
 		r.append("}");
