@@ -13,8 +13,8 @@ the current value. The values will be updated in realtime. It is also possible t
 
 ## Keyboard shortcuts
 
-* left-arrow: open the selected D-Bus service and show the list of properties
-* right-arrow: go back to the service list
+* right-arrow: open the selected D-Bus service and show the list of properties
+* left-arrow: go back to the service list
 * up/down-arrow, page up/down: move up/down (yes, really!)
 * enter: edit the value of the current property
 * t: switch between property values and text
