@@ -1,5 +1,4 @@
 #include <velib/qt/ve_qitem.hpp>
-#include <QtAlgorithms>
 #include "object_list_model.h"
 
 ObjectListModel::ObjectListModel(VeQItem *root, bool recursive, bool showHistory, QObject *parent):
@@ -133,7 +132,7 @@ bool ObjectListModel::tryInsertItem(VeQItem *item)
 		return false;
 	if (mItems.contains(item))
 		return false;
-	int r = qLowerBound(mItems.begin(), mItems.end(), item,
+	int r = std::lower_bound(mItems.begin(), mItems.end(), item,
 		[](VeQItem *i0, VeQItem *i1) { return i0->uniqueId() < i1->uniqueId(); }) - mItems.begin();
 	beginInsertRows(QModelIndex(), r, r);
 	mItems.insert(r, item);

@@ -3,6 +3,11 @@
 #include <QTextStream>
 #include "arguments.h"
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+#include <Qt>
+#define endl Qt::endl
+#endif
+
 Arguments::Arguments()
 {
 	QStringList argList = QCoreApplication::arguments();
