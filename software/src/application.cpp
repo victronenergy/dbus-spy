@@ -1,5 +1,3 @@
-#include <cursesw.h>
-
 #include <velib/qt/ve_qitem.hpp>
 #include <velib/qt/ve_qitems_dbus.hpp>
 
@@ -9,6 +7,11 @@
 #include "object_list_model.h"
 #include "objects_screen.h"
 #include "services_screen.h"
+
+// ncurses clobbers QT's timeout
+#ifdef timeout
+#undef timeout
+#endif
 
 Application::Application(int &argc, char **argv):
 	QCoreApplication(argc, argv)

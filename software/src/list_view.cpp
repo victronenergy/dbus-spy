@@ -2,6 +2,11 @@
 #include "abstract_object_list_model.h"
 #include "list_view.h"
 
+// ncurses clobbers QT's timeout
+#ifdef timeout
+#undef timeout
+#endif
+
 ListView::ListView(WINDOW *w, QObject *parent):
 	QObject(parent),
 	mWindow(w),
