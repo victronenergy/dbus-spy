@@ -60,8 +60,10 @@ void ObjectListModel::onChildRemoved(VeQItem *item)
 	disconnectItems(item);
 }
 
-void ObjectListModel::onItemStateChanged(VeQItem *item)
+void ObjectListModel::onItemStateChanged()
 {
+	VeQItem *item = static_cast<VeQItem *>(sender());
+
 	switch (item->getState()) {
 	case VeQItem::Idle:
 		item->getValue();
@@ -101,7 +103,7 @@ void ObjectListModel::addItems(VeQItem *item)
 		if (item->getState() == VeQItem::Idle)
 			item->getValue();
 		connect(item, SIGNAL(stateChanged(VeQItem*,State)),
-				this, SLOT(onItemStateChanged(VeQItem*)));
+				this, SLOT(onItemStateChanged()));
 	}
 	tryInsertItem(item);
 	if (item->isLeaf()) {
@@ -156,7 +158,7 @@ void ObjectListModel::disconnectItems(VeQItem *item)
 		return;
 	mConnectedItems.remove(item);
 	disconnect(item, SIGNAL(stateChanged(VeQItem *, State)),
-			   this, SLOT(onItemStateChanged(VeQItem *)));
+			   this, SLOT(onItemStateChanged()));
 	if (item->isLeaf()) {
 		Q_ASSERT(item->itemChildren().isEmpty());
 		return;

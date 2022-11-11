@@ -28,7 +28,7 @@ private slots:
 	void onLeaveFavorites();
 	void onServiceSelected(VeQItem *serviceRoot);
 	void onDBusItemAdded(VeQItem *item);
-	void onStateChanged(VeQItem *item);
+	void onStateChanged();
 
 private:
 	QTimer *mTimer = nullptr;

@@ -144,8 +144,10 @@ void FavoritesListModel::onServiceAdded(VeQItem *item)
 	}
 }
 
-void FavoritesListModel::onItemStateChanged(VeQItem *item)
+void FavoritesListModel::onItemStateChanged()
 {
+	VeQItem *item = static_cast<VeQItem *>(sender());
+
 	if (item->getState() == VeQItem::Idle) {
 		// We get here when a D-Bus service is restarted. When the service is stopped state changes
 		// to Offline, when it is created again, state changes to Idle.
@@ -177,13 +179,13 @@ void FavoritesListModel::connectItem(VeQItem *item)
 	if (item->getState() == VeQItem::Idle)
 		item->getValue();
 	connect(item, SIGNAL(stateChanged(VeQItem*, State)),
-			this, SLOT(onItemStateChanged(VeQItem*)));
+			this, SLOT(onItemStateChanged()));
 }
 
 void FavoritesListModel::disconnectItem(VeQItem *item)
 {
 	disconnect(item, SIGNAL(stateChanged(VeQItem*,State)),
-			   this, SLOT(onItemStateChanged(VeQItem*)));
+			   this, SLOT(onItemStateChanged()));
 }
 
 VeQItem *FavoritesListModel::getServiceRoot(VeQItem *item) const

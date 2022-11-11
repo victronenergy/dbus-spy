@@ -26,7 +26,7 @@ public:
 
 private slots:
 	void onServiceAdded(VeQItem *item);
-	void onItemStateChanged(VeQItem *item);
+	void onItemStateChanged();
 
 private:
 	void adjustSettings();

@@ -55,7 +55,7 @@ int Application::init()
 		if (item == nullptr)
 			break;
 		connect(item, SIGNAL(stateChanged(VeQItem*,State)),
-				this, SLOT(onStateChanged(VeQItem*)));
+				this, SLOT(onStateChanged()));
 	}
 	connect(mRoot, SIGNAL(childAdded(VeQItem*)), this, SLOT(onDBusItemAdded(VeQItem*)));
 
@@ -195,8 +195,9 @@ void Application::onDBusItemAdded(VeQItem *item)
 	static_cast<VeQItemDbus *>(item)->introspect();
 }
 
-void Application::onStateChanged(VeQItem *item)
+void Application::onStateChanged()
 {
+	VeQItem *item = static_cast<VeQItem *>(sender());
 	Q_ASSERT(item->itemParent() == mRoot);
 	if (item->getState() == VeQItem::Offline && item->itemChild(0) == nullptr) {
 		mIncompatibleServices.insert(item->id());

@@ -25,7 +25,7 @@ signals:
 private slots:
 	void onChildAdded(VeQItem *item);
 	void onChildRemoved(VeQItem *item);
-	void onItemStateChanged(VeQItem *item);
+	void onItemStateChanged();
 
 private:
 	void updateRoot();
