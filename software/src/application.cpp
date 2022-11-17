@@ -54,7 +54,7 @@ int Application::init()
 		VeQItem *item = mRoot->itemChild(i);
 		if (item == nullptr)
 			break;
-		connect(item, SIGNAL(stateChanged(VeQItem*,State)),
+		connect(item, SIGNAL(stateChanged(VeQItem::State)),
 				this, SLOT(onStateChanged()));
 	}
 	connect(mRoot, SIGNAL(childAdded(VeQItem*)), this, SLOT(onDBusItemAdded(VeQItem*)));

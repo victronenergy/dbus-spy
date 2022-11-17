@@ -178,14 +178,12 @@ void FavoritesListModel::connectItem(VeQItem *item)
 {
 	if (item->getState() == VeQItem::Idle)
 		item->getValue();
-	connect(item, SIGNAL(stateChanged(VeQItem*, State)),
-			this, SLOT(onItemStateChanged()));
+	connect(item, SIGNAL(stateChanged(VeQItem::State)), this, SLOT(onItemStateChanged()));
 }
 
 void FavoritesListModel::disconnectItem(VeQItem *item)
 {
-	disconnect(item, SIGNAL(stateChanged(VeQItem*,State)),
-			   this, SLOT(onItemStateChanged()));
+	disconnect(item, SIGNAL(stateChanged(VeQItem::State)), this, SLOT(onItemStateChanged()));
 }
 
 VeQItem *FavoritesListModel::getServiceRoot(VeQItem *item) const
