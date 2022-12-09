@@ -12,9 +12,6 @@ unix {
     target.path = $${DESTDIR}$${bindir}
 }
 
-CONFIG += link_pkgconfig
-PKGCONFIG += ncursesw
-
 QT += core dbus xml
 QT -= gui
 
@@ -22,7 +19,7 @@ CONFIG += console dbus
 CONFIG -= app_bundle
 DEFINES += VERSION=\\\"$${VERSION}\\\"
 
-LIBS += -lformw
+LIBS += -lformw -lncursesw
 
 SOURCES += \
     src/application.cpp \
