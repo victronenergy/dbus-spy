@@ -27,14 +27,12 @@ the current value. The values will be updated in realtime. It is also possible t
 ## Compilation
 
 dbus-spy relies on several external libraries:
-* QT-4.8
+* Qt4 / Qt5 or Qt6
 * libncursesw and libformw5
-* velib This is the Victron Energy platform library. Unfortunately this library is not available
-  as open source. Please contact Victron Energy if you need it.
+* veutil (as a submodule)
 
 You will also need the
-[venus SDK](https://www.victronenergy.com/live/open_source:ccgx:setup_development_environment).
-As of this moment you need to use version 1.40.
+[venus SDK](https://github.com/victronenergy/venus/wiki/howto-install-and-use-the-sdk).
 
 ## Some ceveats
 
@@ -46,7 +44,7 @@ As of this moment you need to use version 1.40.
   a QT+QML application running on PC linux. Someday I decided that being able to run the application
   on the embedded device itself would be more useful. So I rewrote the GUI and kept the D-Bus code.
 * If you change a value of a property no checks are performed by the application. If the entered
-  text strin parses to a floating point value, it will be sent to the D-Bus as a 'double'
+  text string parses to a floating point value, it will be sent to the D-Bus as a 'double'
   value. Otherwise, it will be parsed an integer. If that does not work, the string itself will be
   sent. The receiving application may expect another type and may refuse to handle the value.
 * Changing values on D-Bus services may be dangerous. Only do this if you know what you are doing.
