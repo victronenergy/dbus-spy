@@ -1,4 +1,5 @@
-#include <velib/qt/ve_qitem.hpp>
+#include <veutil/qt/ve_qitem.hpp>
+
 #include "object_list_model.h"
 #include "object_listview.h"
 #include "services_screen.h"

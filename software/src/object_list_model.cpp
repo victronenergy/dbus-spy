@@ -1,4 +1,5 @@
-#include <velib/qt/ve_qitem.hpp>
+#include <veutil/qt/ve_qitem.hpp>
+
 #include "object_list_model.h"
 
 ObjectListModel::ObjectListModel(VeQItem *root, bool recursive, bool showHistory, QObject *parent):

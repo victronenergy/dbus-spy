@@ -1,5 +1,7 @@
 #include <QSettings>
-#include <velib/qt/ve_qitem.hpp>
+
+#include <veutil/qt/ve_qitem.hpp>
+
 #include "favorites_list_model.h"
 
 FavoritesListModel::FavoritesListModel(VeQItem *root, QObject *parent):

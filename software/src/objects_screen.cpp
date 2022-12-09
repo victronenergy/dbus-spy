@@ -1,4 +1,5 @@
-#include <velib/qt/ve_qitem.hpp>
+#include <veutil/qt/ve_qitem.hpp>
+
 #include "favorites_list_model.h"
 #include "objects_screen.h"
 #include "object_list_model.h"
