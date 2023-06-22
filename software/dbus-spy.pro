@@ -52,4 +52,11 @@ DISTFILES += \
 QMAKE_CXXFLAGS *= -ffunction-sections
 QMAKE_LFLAGS *= -Wl,--gc-sections
 
+!lessThan(QT_VERSION, 5) {
+    QMAKE_CXXFLAGS += "-Wsuggest-override"
+    CONFIG(debug, debug|release) {
+        QMAKE_CXXFLAGS += "-Werror=suggest-override"
+    }
+}
+
 include(ext/veutil/src/qt/veqitem.pri)
