@@ -21,6 +21,7 @@ the current value. The values will be updated in realtime. It is also possible t
 * q: quit the apllication. ctrl-c will do the same job
 * f: add the current item to the list of favorites. The item will light up after it has been added.
   Press 'f' again to remove it from the list.
+* g: get the item from the service (again).
 * F: switch to/from the favorites list.
 * r: refresh the screen
 

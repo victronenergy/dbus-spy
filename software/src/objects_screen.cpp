@@ -62,6 +62,16 @@ bool ObjectsScreen::handleInput(wint_t c)
 			mListView->updateItem(item);
 			return true;
 		}
+		case 'g':
+		{
+			int row = mListView->getSelection();
+			VeQItem *item = mListView->model()->getItem(row);
+			if (mListView->showText())
+				item->getText(true);
+			else
+				item->getValue(true);
+			return true;
+		}
 		case 't':
 			mListView->setShowText(!mListView->showText());
 			refresh();
