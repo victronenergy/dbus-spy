@@ -13,7 +13,7 @@ ObjectsScreen::ObjectsScreen(const QString &title, AbstractObjectListModel *mode
 	mTitleWindow = newwin(1, getmaxx(stdscr), 0, 0);
 	wmove(mTitleWindow, 0, 0);
 	wattron(mTitleWindow, COLOR_PAIR(1));
-	wprintw(mTitleWindow, title.toUtf8().data());
+	wprintw(mTitleWindow, "%s", title.toUtf8().data());
 	wattroff(mTitleWindow, COLOR_PAIR(1));
 	wrefresh(mTitleWindow);
 
@@ -174,7 +174,7 @@ void ObjectsScreen::startEdit(const QString &description, const QString &text)
 	set_current_field(mEditForm, mEditFields[0]);
 	curs_set(1);
 
-	mvprintw(y, 0, description.toUtf8().data());
+	mvprintw(y, 0, "%s", description.toUtf8().data());
 	wmove(mEditWindow, 0, 0);
 }
 

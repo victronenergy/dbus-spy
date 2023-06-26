@@ -96,7 +96,7 @@ bool ListView::handleInput(int c)
 void ListView::drawRow(int index, int width) const
 {
 	QVariant v = mModel->data(mModel->index(index, 0));
-	wprintw(mWindow, v.toString().left(width).toUtf8().data());
+	wprintw(mWindow, "%s", v.toString().left(width).toUtf8().data());
 }
 
 bool ListView::isEmphasized(int index) const
