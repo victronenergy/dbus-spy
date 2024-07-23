@@ -21,6 +21,8 @@ DEFINES += VERSION=\\\"$${VERSION}\\\"
 
 LIBS += -lformw -lncursesw
 
+equals(QT_MAJOR_VERSION, 6): QMAKE_CXXFLAGS += -std=c++17
+
 SOURCES += \
     src/application.cpp \
     src/arguments.cpp \
