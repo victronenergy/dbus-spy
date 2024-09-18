@@ -62,8 +62,14 @@ void ObjectListView::drawRow(int index, int width) const
 			text = mShowText ? item->getText() : convertVariant(item->getValue());
 	} else {
 		VeQItem *productName = item->itemGetOrCreate("ProductName");
+		VeQItem *customName = item->itemGetOrCreate("CustomName");
 		registerItem(productName);
-		text = productName->getValue().toString();
+		registerItem(customName);
+		QString customNameStr = customName->getValue().toString();
+		if (customNameStr != "")
+			text = customNameStr;
+		else
+			text = productName->getValue().toString();
 	}
 	int gapSize = qMax(1, width - text.size() - line.size());
 	for (int i=0; i<gapSize; ++i)
@@ -112,7 +118,7 @@ void ObjectListView::updateItem(VeQItem *item)
 {
 	int i = model()->indexOf(item);
 	if (i == -1) {
-		// Check if this is a ProductName item representing its service.
+		// Check if this is a ProductName/CustomName item representing its service.
 		VeQItem *parent = item->itemParent();
 		if (parent != nullptr)
 			i = model()->indexOf(parent);
