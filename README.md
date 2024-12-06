@@ -8,22 +8,30 @@ properties (whenever the application publishing the property allows it).
 
 On startup dbus-spy will present a list of all victron D-Bus services on the system (the one whose
 name starts with com.victronenergy. Those services are considered to be compatible with the methods
-and signals we need). When activated all properties within the service will be shown together with
+and signals we need). When activated, all properties within the service, will be shown together with
 the current value. The values will be updated in realtime. It is also possible to change the value.
+History properties are hidden by default and can be enabled with a command line argument.
+
+## Command line options
+* `--dbus`: dbus address (session, system, ...)
+* `-h` or `--help`: Show help
+* `-i` or `--introspect`: Use introspect to build a tree of the pesky services support GetValue on the root
+* `-r` or `--history`: Show items whose path starts with 'History'.
+* `-v` or `--version`: Show version
 
 ## Keyboard shortcuts
 
-* right-arrow: open the selected D-Bus service and show the list of properties
-* left-arrow: go back to the service list
-* up/down-arrow, page up/down: move up/down (yes, really!)
-* enter: edit the value of the current property
-* t: switch between property values and text
-* q: quit the apllication. ctrl-c will do the same job
-* f: add the current item to the list of favorites. The item will light up after it has been added.
-  Press 'f' again to remove it from the list.
-* g: get the item from the service (again).
-* F: switch to/from the favorites list.
-* r: refresh the screen
+* `right-arrow`: open the selected D-Bus service and show the list of properties
+* `left-arrow`: go back to the service list
+* `up/down-arrow`, `page up/down`: move up/down (yes, really!)
+* `enter`: edit the value of the current property
+* `t`: switch between property values and text
+* `q`: quit the apllication. ctrl-c will do the same job
+* `f`: add the current item to the list of favorites. The item will light up after it has been added.
+  Press `f` again to remove it from the list.
+* `g`: get the item from the service (again).
+* `F`: switch to/from the favorites list.
+* `r`: refresh the screen
 
 ## Compilation
 
