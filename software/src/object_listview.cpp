@@ -131,7 +131,7 @@ void ObjectListView::updateItem(VeQItem *item)
 
 VeQItem *ObjectListView::getItem(int index) const
 {
-	ObjectListModel *m = static_cast<ObjectListModel *>(model());
+	AbstractObjectListModel *m = model();
 	VeQItem *item = m->getItem(index);
 	registerItem(item);
 	return item;

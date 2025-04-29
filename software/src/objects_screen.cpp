@@ -8,6 +8,7 @@
 ObjectsScreen::ObjectsScreen(const QString &title, AbstractObjectListModel *model,
 							 FavoritesListModel *favorites, QObject *parent):
 	QObject(parent),
+	mModel(model),
 	mFavorites(favorites)
 {
 	mTitleWindow = newwin(1, getmaxx(stdscr), 0, 0);

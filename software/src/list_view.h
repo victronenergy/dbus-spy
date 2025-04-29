@@ -17,10 +17,10 @@ public:
 	AbstractObjectListModel *model() const;
 	void setModel(AbstractObjectListModel *m);
 	int getSelection() const;
-	void setSelection(int s);
+	virtual void setSelection(int s);
 	virtual bool handleInput(int c);
-	void redraw();
-	void redrawRows(int startIndex, int endIndex);
+	virtual void redraw();
+	virtual void redrawRows(int startIndex, int endIndex);
 
 protected:
 	virtual void drawRow(int index, int width) const;

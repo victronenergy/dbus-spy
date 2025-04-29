@@ -6,6 +6,7 @@
 
 class AbstractObjectListModel;
 class FavoritesListModel;
+class SearchManager;
 class VeQItem;
 
 class ObjectListView : public ListView

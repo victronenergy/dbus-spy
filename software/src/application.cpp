@@ -4,9 +4,11 @@
 #include "application.h"
 #include "arguments.h"
 #include "favorites_list_model.h"
+#include "object_listview.h"
 #include "object_list_model.h"
 #include "objects_screen.h"
 #include "services_screen.h"
+#include "search_manager.h"
 
 // ncurses clobbers QT's timeout
 #ifdef timeout
@@ -23,6 +25,9 @@ Application::~Application()
 {
 	if (mTimer != nullptr)
 		endwin();
+
+	if (mSearchWindow != nullptr)
+		delwin(mSearchWindow);
 }
 
 int Application::init()
@@ -60,12 +65,14 @@ int Application::init()
 	connect(mRoot, SIGNAL(childAdded(VeQItem*)), this, SLOT(onDBusItemAdded(VeQItem*)));
 
 	mFavoritesModel = new FavoritesListModel{mRoot, this};
+	mSearchManager = new SearchManager(this);
 
 	initscr();
 	start_color();
 	init_pair(1, COLOR_WHITE, COLOR_MAGENTA); // Title bar
 	init_pair(2, COLOR_WHITE, COLOR_BLACK); // normal text
 	init_pair(3, COLOR_CYAN, COLOR_BLACK); // selected text
+	init_pair(4, COLOR_BLACK, COLOR_YELLOW); // search highlight
 	cbreak();
 	noecho();
 	nodelay(stdscr, TRUE);
@@ -91,16 +98,35 @@ void Application::onCursesTimer()
 		if (status == ERR)
 			break;
 
+		// First, check if we're in search mode
+		if (mSearchMode) {
+			onSearchInput(c);
+			continue;
+		}
+
+		// Pass input to the appropriate screen FIRST
 		bool handled = false;
-		if (mObjects != nullptr)
+		if (mObjects != nullptr) {
 			handled = mObjects->handleInput(c);
-		else if (mServices != nullptr)
+		} else if (mServices != nullptr) {
 			handled = mServices->handleInput(c);
-		else if (mFavorites != nullptr)
+		} else if (mFavorites != nullptr) {
 			handled = mFavorites->handleInput(c);
+		}
+
+		// Only if the screen didn't handle the input, process global keys
 		if (!handled) {
 			switch (c)
 			{
+			case '/':
+				startSearch();
+				break;
+			case 'n':
+				findNext();
+				break;
+			case 'N':
+				findPrevious();
+				break;
 			case 'F':
 				if (mFavorites == nullptr)
 					onGoToFavorites();
@@ -203,5 +229,215 @@ void Application::onStateChanged()
 		mIncompatibleServices.insert(item->id());
 		onDBusItemAdded(item);
 		item->produceValue(QVariant(), VeQItem::Synchronized);
+	}
+}
+
+void Application::startSearch()
+{
+	if (mSearchWindow == nullptr) {
+		mSearchWindow = newwin(1, getmaxx(stdscr), getmaxy(stdscr) - 1, 0);
+		keypad(mSearchWindow, TRUE);
+	}
+
+	wclear(mSearchWindow);
+	wmove(mSearchWindow, 0, 0);
+	waddstr(mSearchWindow, (char*)"/");
+	wrefresh(mSearchWindow);
+
+	mSearchMode = true;
+	mSearchBuffer.clear();
+	curs_set(1);
+}
+
+void Application::onSearchInput(wint_t c)
+{
+	switch (c) {
+		case KEY_ENTER:
+		case '\n':
+			mSearchMode = false;
+			curs_set(0);
+
+			// Clear the search window
+			wclear(mSearchWindow);
+			wrefresh(mSearchWindow);
+
+			if (!mSearchBuffer.isEmpty()) {
+				mSearchManager->startSearch(mSearchBuffer);
+				findNext();
+			}
+			break;
+
+		case KEY_BACKSPACE:
+		case 127: // Also backspace on some systems
+			if (!mSearchBuffer.isEmpty()) {
+				mSearchBuffer.chop(1);
+				wclear(mSearchWindow);
+				wmove(mSearchWindow, 0, 0);
+				waddstr(mSearchWindow, (char*)"/");
+				waddstr(mSearchWindow, mSearchBuffer.toUtf8().data());
+				// Position cursor right after the text
+				wmove(mSearchWindow, 0, 1 + mSearchBuffer.length());
+				wrefresh(mSearchWindow);
+			} else if (c == KEY_BACKSPACE || c == 127) {
+				// Cancel search if backspace on empty search
+				mSearchMode = false;
+				curs_set(0);
+			}
+			break;
+
+		case 27: // ESC key - cancel search
+			mSearchMode = false;
+			curs_set(0);
+			break;
+
+		default:
+			// Add character to search buffer if it's printable
+			if (c >= 32 && c <= 126) {
+				mSearchBuffer += QChar(c);
+				waddch(mSearchWindow, c);
+				// Make sure cursor stays at the end of input
+				wmove(mSearchWindow, 0, 1 + mSearchBuffer.length());
+				wrefresh(mSearchWindow);
+			}
+			break;
+	}
+
+	if (!mSearchMode) {
+		wclear(mSearchWindow);
+		wrefresh(mSearchWindow);
+		if (mObjects != nullptr)
+			mObjects->repaint();
+		else if (mServices != nullptr)
+			mServices->repaint();
+		else if (mFavorites != nullptr)
+			mFavorites->repaint();
+	}
+
+	// Only refresh the main screen when exiting search mode
+	// This prevents disrupting the cursor position during typing
+	if (!mSearchMode) {
+		refresh();
+	}
+}
+
+void Application::findNext()
+{
+	if (!mSearchManager->hasPattern())
+		return;
+
+	AbstractObjectListModel *model = nullptr;
+	ObjectListView *listView = nullptr;
+
+	if (mObjects != nullptr) {
+		model = mObjects->getModel();
+		listView = mObjects->getListView();
+	} else if (mServices != nullptr) {
+		model = mServices->getModel();
+		listView = mServices->getListView();
+	} else if (mFavorites != nullptr) {
+		model = mFavorites->getModel();
+		listView = mFavorites->getListView();
+	}
+
+	if (model && listView) {
+		int currentIndex = listView->getSelection();
+		int newIndex = mSearchManager->findNext(model, currentIndex);
+
+		// Get the search pattern
+		QString pattern = mSearchManager->pattern();
+
+		// Make sure we're in the right mode for status display
+		curs_set(0);
+
+		// Clear the status line at the bottom of the screen
+		int y = getmaxy(stdscr) - 1;
+		move(y, 0);
+		clrtoeol();
+
+		if (newIndex >= 0) {
+			listView->setSelection(newIndex);
+			attron(A_BOLD);
+			mvprintw(y, 0, "Found: %s", pattern.toUtf8().data());
+			attroff(A_BOLD);
+		} else {
+			attron(A_BOLD | COLOR_PAIR(4)); // Use search highlight color
+			mvprintw(y, 0, "Pattern not found: %s", pattern.toUtf8().data());
+			attroff(A_BOLD | COLOR_PAIR(4));
+		}
+
+		// Make sure to refresh both stdscr and the active window
+		refresh();
+
+		// Keep the message visible for a moment
+		napms(300);
+
+		// Redraw the active screen to ensure everything is updated
+		if (mObjects != nullptr)
+			mObjects->repaint();
+		else if (mServices != nullptr)
+			mServices->repaint();
+		else if (mFavorites != nullptr)
+			mFavorites->repaint();
+	}
+}
+
+void Application::findPrevious()
+{
+	if (!mSearchManager->hasPattern())
+		return;
+
+	AbstractObjectListModel *model = nullptr;
+	ObjectListView *listView = nullptr;
+
+	if (mObjects != nullptr) {
+		model = mObjects->getModel();
+		listView = mObjects->getListView();
+	} else if (mServices != nullptr) {
+		model = mServices->getModel();
+		listView = mServices->getListView();
+	} else if (mFavorites != nullptr) {
+		model = mFavorites->getModel();
+		listView = mFavorites->getListView();
+	}
+
+	if (model && listView) {
+		int currentIndex = listView->getSelection();
+		int newIndex = mSearchManager->findPrevious(model, currentIndex);
+
+		// Get the search pattern
+		QString pattern = mSearchManager->pattern();
+
+		// Make sure we're in the right mode for status display
+		curs_set(0);
+
+		// Clear the status line at the bottom of the screen
+		int y = getmaxy(stdscr) - 1;
+		move(y, 0);
+		clrtoeol();
+
+		if (newIndex >= 0) {
+			listView->setSelection(newIndex);
+			attron(A_BOLD);
+			mvprintw(y, 0, "Found (reverse): %s", pattern.toUtf8().data());
+			attroff(A_BOLD);
+		} else {
+			attron(A_BOLD | COLOR_PAIR(4)); // Use search highlight color
+			mvprintw(y, 0, "Pattern not found (reverse): %s", pattern.toUtf8().data());
+			attroff(A_BOLD | COLOR_PAIR(4));
+		}
+
+		// Make sure to refresh both stdscr and the active window
+		refresh();
+
+		// Keep the message visible for a moment
+		napms(300);
+
+		// Redraw the active screen to ensure everything is updated
+		if (mObjects != nullptr)
+			mObjects->repaint();
+		else if (mServices != nullptr)
+			mServices->repaint();
+		else if (mFavorites != nullptr)
+			mFavorites->repaint();
 	}
 }
