@@ -34,6 +34,7 @@ SOURCES += \
     src/objects_screen.cpp \
     src/services_screen.cpp \
     src/signal_handler.cpp \
+    src/search_manager.cpp \
 
 HEADERS += \
     src/abstract_object_list_model.h \
@@ -46,6 +47,7 @@ HEADERS += \
     src/objects_screen.h \
     src/services_screen.h \
     src/signal_handler.h \
+    src/search_manager.h \
 
 DISTFILES += \
     ../README.md

@@ -16,8 +16,8 @@ ServicesScreen::ServicesScreen(VeQItem *root, QObject *parent):
 
 	mListViewWindow = newwin(getmaxy(stdscr) - 2, getmaxx(stdscr), 1, 0);
 	keypad(mListViewWindow, true);
-	auto model = new ObjectListModel{root, false, true, this};
-	mListView = new ObjectListView{model, mListViewWindow, this};
+	mModel = new ObjectListModel{root, false, true, this};
+	mListView = new ObjectListView{mModel, mListViewWindow, this};
 	refresh();
 }
 
@@ -39,7 +39,7 @@ bool ServicesScreen::handleInput(wint_t c)
 	case '\n':
 	{
 		int s = mListView->getSelection();
-		VeQItem *item = static_cast<ObjectListModel *>(mListView->model())->getItem(s);
+		VeQItem *item = static_cast<ObjectListModel *>(mModel)->getItem(s);
 		if (item != nullptr)
 			emit serviceSelected(item);
 		return true;

@@ -3,11 +3,14 @@
 
 #include <QCoreApplication>
 #include <QSet>
+#include <QString>
+#include <cursesw.h> // Added for WINDOW type
 
 class FavoritesListModel;
-class ListView;
+class ObjectListView;
 class ObjectsScreen;
 class QTimer;
+class SearchManager;
 class ServicesScreen;
 class VeQItem;
 
@@ -21,6 +24,18 @@ public:
 
 	int init();
 
+	// Get the search manager instance
+	SearchManager* searchManager() const { return mSearchManager; }
+
+	// Start a search throughout the application
+	void startSearch();
+
+	// Search for next occurrence
+	void findNext();
+
+	// Search for previous occurrence
+	void findPrevious();
+
 private slots:
 	void onCursesTimer();
 	void onGoBack();
@@ -29,6 +44,7 @@ private slots:
 	void onServiceSelected(VeQItem *serviceRoot);
 	void onDBusItemAdded(VeQItem *item);
 	void onStateChanged();
+	void onSearchInput(wint_t c);
 
 private:
 	QTimer *mTimer = nullptr;
@@ -41,6 +57,12 @@ private:
 	QString mPrevPath;
 	bool mUseIntrospect = false;
 	bool mShowHistory = false;
+
+	// Search related members
+	SearchManager *mSearchManager = nullptr;
+	bool mSearchMode = false;
+	QString mSearchBuffer;
+	WINDOW *mSearchWindow = nullptr;
 };
 
 #endif

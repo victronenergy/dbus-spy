@@ -32,6 +32,9 @@ History properties are hidden by default and can be enabled with a command line 
 * `g`: get the item from the service (again).
 * `F`: switch to/from the favorites list.
 * `r`: refresh the screen
+* `/`: start searching for a string
+* `n`: search for next hit forwards
+* `N`: search for next hit backwards
 
 ## Compilation
 

@@ -9,6 +9,7 @@
 class AbstractObjectListModel;
 class FavoritesListModel;
 class ObjectListView;
+class ListView;
 class VeQItem;
 
 class ObjectsScreen : public QObject
@@ -22,6 +23,12 @@ public:
 	virtual bool handleInput(wint_t c);
 	void repaint();
 
+	// Expose the model directly
+	AbstractObjectListModel* getModel() const { return mModel; }
+
+	// Get the list view
+	ObjectListView* getListView() const { return mListView; }
+
 signals:
 	void goBack();
 
@@ -33,6 +40,7 @@ private:
 	WINDOW *mTitleWindow = nullptr;
 	WINDOW *mListViewWindow = nullptr;
 	ObjectListView *mListView = nullptr;
+	AbstractObjectListModel *mModel = nullptr;
 	FavoritesListModel *mFavorites = nullptr;
 	WINDOW *mEditWindow = nullptr;
 	FIELD *mEditFields[2];
