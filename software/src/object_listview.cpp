@@ -164,6 +164,8 @@ QString ObjectListView::convertVariant(const QVariant &value)
 		return value.toString();
 	case QVariant::Invalid:
 		return "-";
+	case QVariant::StringList:
+		return "[" + value.toStringList().join(",") + "]";
 	case QVariant::List:
 	{
 		QList<QVariant> list = value.toList();
