@@ -111,15 +111,42 @@ bool ObjectsScreen::handleInput(wint_t c)
 			QVariant qv;
 			QString v = getEditValue();
 			bool ok = false;
-			int i = v.toLong(&ok);
-			if (ok) {
-				qv = i;
-			} else {
-				double d = v.toDouble(&ok);
-				if (ok) {
-					qv = d;
+			if (v.startsWith("[") && v.endsWith("]")) {
+				v = v.mid(1, v.size() - 2);
+				QStringList parts = v.split(',', Qt::SkipEmptyParts);
+
+				const bool allInts = std::all_of(parts.begin(), parts.end(),
+        			[](const QString& v){ bool ok = false; v.toLong(&ok); return ok; });
+				const bool allDoubles = std::all_of(parts.begin(), parts.end(),
+					[](const QString& v){ bool ok = false; v.toDouble(&ok); return ok; });
+
+				if (allInts) {
+					QList<int> ints;
+					for (const QString &part : parts)
+						ints.append(part.toLong());
+					qv = QVariant::fromValue(ints);
+				} else if (allDoubles) {
+					QList<double> doubles;
+					for (const QString &part : parts)
+						doubles.append(part.toDouble());
+					qv = QVariant::fromValue(doubles);
 				} else {
-					qv = v;
+					QStringList list;
+					for (const QString &part : parts)
+						list.append(part);
+					qv = QVariant::fromValue(list);
+				}
+			} else {
+				int i = v.toLong(&ok);
+				if (ok) {
+					qv = i;
+				} else {
+					double d = v.toDouble(&ok);
+					if (ok) {
+						qv = d;
+					} else {
+						qv = v;
+					}
 				}
 			}
 			mListView->setValue(mListView->getSelection(), qv);
