@@ -114,7 +114,8 @@ void ListView::redraw()
 {
 	if (mModel == nullptr)
 		return;
-	mSelectionIndex = qBound(0, mSelectionIndex, mModel->rowCount() - 1);
+	if (mModel->rowCount() > 0)
+		mSelectionIndex = qBound(0, mSelectionIndex, mModel->rowCount() - 1);
 	int h = getListHeight();
 	wmove(mWindow, 0, 0);
 	int endIndex = qMin(mModel->rowCount(), h + mStartIndex);
