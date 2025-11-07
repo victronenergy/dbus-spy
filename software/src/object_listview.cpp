@@ -160,8 +160,6 @@ QString ObjectListView::convertVariant(const QVariant &value)
 	switch (value.type()) {
 	case QVariant::Double:
 		return QString::number(value.toDouble());
-	case QVariant::String:
-		return value.toString();
 	case QVariant::Invalid:
 		return "-";
 	case QVariant::StringList:
@@ -192,6 +190,6 @@ QString ObjectListView::convertVariant(const QVariant &value)
 		return r;
 	}
 	default:
-		return QString::number(value.toInt());
+		return value.toString();
 	}
 }
