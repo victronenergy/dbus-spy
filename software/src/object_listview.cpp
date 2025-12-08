@@ -157,14 +157,16 @@ QString ObjectListView::convertVariant(const QVariant &value)
 		QDBusVariant v = qvariant_cast<QDBusVariant>(value);
 		return convertVariant(v.variant());
 	}
-	switch (value.type()) {
-	case QVariant::Double:
+	switch ((QMetaType::Type)value.type()) {
+	case QMetaType::UChar:
+		return QString::number(value.toUInt());
+	case QMetaType::Double:
 		return QString::number(value.toDouble());
-	case QVariant::Invalid:
+	case QMetaType::UnknownType:
 		return "-";
-	case QVariant::StringList:
+	case QMetaType::QStringList:
 		return "[" + value.toStringList().join(",") + "]";
-	case QVariant::List:
+	case QMetaType::QVariantList:
 	{
 		QList<QVariant> list = value.toList();
 		QString r = "[";
@@ -178,7 +180,7 @@ QString ObjectListView::convertVariant(const QVariant &value)
 		r.append("]");
 		return r;
 	}
-	case QVariant::Map:
+	case QMetaType::QVariantMap:
 	{
 		QMap<QString, QVariant> map = value.toMap();
 		QString r = "{";
