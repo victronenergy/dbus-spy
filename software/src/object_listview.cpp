@@ -158,6 +158,8 @@ QString ObjectListView::convertVariant(const QVariant &value)
 		return convertVariant(v.variant());
 	}
 	switch (value.typeId()) {
+	case QMetaType::UChar:
+		return QString::number(value.toUInt());
 	case QMetaType::Double:
 		return QString::number(value.toDouble());
 	case QMetaType::UnknownType:
