@@ -18,6 +18,8 @@ History properties are hidden by default and can be enabled with a command line 
 * `-i` or `--introspect`: Use introspect to build a tree of the pesky services support GetValue on the root
 * `-r` or `--history`: Show items whose path starts with 'History'.
 * `-v` or `--version`: Show version
+* `--server`: Serve a live favorites data feed over WebSocket on 127.0.0.1 (see `software/graph.html`)
+* `--server-port`: Port for `--server` to listen on (default: 57813)
 
 ## Keyboard shortcuts
 
@@ -60,5 +62,3 @@ You will also need the
   value. Otherwise, it will be parsed an integer. If that does not work, the string itself will be
   sent. The receiving application may expect another type and may refuse to handle the value.
 * Changing values on D-Bus services may be dangerous. Only do this if you know what you are doing.
-* The screen will not be redrawn when the size of the terminal changes. So chose it wisely before
-  starting the application.

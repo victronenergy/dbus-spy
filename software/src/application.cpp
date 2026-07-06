@@ -4,6 +4,8 @@
 #include "application.h"
 #include "arguments.h"
 #include "favorites_list_model.h"
+#include "server.h"
+#include "server_common.h"
 #include "object_listview.h"
 #include "object_list_model.h"
 #include "objects_screen.h"
@@ -38,6 +40,8 @@ int Application::init()
 	args.addArg("-h --help", "Show help");
 	args.addArg("-i --introspect", "Use introspect to build a tree of the pesky services support GetValue on the root");
 	args.addArg("-r --history", "Show items whose path starts with 'History'.");
+	args.addArg("--server", "Serve a live favorites data feed over WebSocket on 127.0.0.1 (see software/graph.html)");
+	args.addArg("--server-port", "Port for --server to listen on (default: " + QString::number(ServerProtocol::DefaultPort) + ")");
 	if (args.contains("h") || args.contains("help")) {
 		args.help();
 		return -1;
@@ -50,6 +54,13 @@ int Application::init()
 	mShowHistory = args.contains("r") || args.contains("history");
 
 	QString dbusAddress = args.contains("dbus") ? args.value("dbus") : "system";
+
+	// Forked (if requested) before anything D-Bus- or curses-related exists,
+	// so the child starts with nothing to accidentally inherit and misuse.
+	if (args.contains("server")) {
+		int port = args.contains("server-port") ? args.value("server-port").toInt() : ServerProtocol::DefaultPort;
+		mServer = Server::start(port, this);
+	}
 
 	auto producer = new VeQItemDbusProducer{VeQItems::getRoot(), "dbus", true, true, this};
 	producer->open(dbusAddress);
@@ -66,6 +77,8 @@ int Application::init()
 
 	mFavoritesModel = new FavoritesListModel{mRoot, this};
 	mSearchManager = new SearchManager(this);
+	if (mServer != nullptr)
+		mServer->attach(mFavoritesModel);
 
 	initscr();
 	start_color();

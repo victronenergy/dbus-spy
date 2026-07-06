@@ -11,6 +11,7 @@ class ObjectListView;
 class ObjectsScreen;
 class QTimer;
 class SearchManager;
+class Server;
 class ServicesScreen;
 class VeQItem;
 
@@ -50,6 +51,7 @@ private:
 	QTimer *mTimer = nullptr;
 	VeQItem *mRoot = nullptr;
 	FavoritesListModel *mFavoritesModel = nullptr;
+	Server *mServer = nullptr;
 	ServicesScreen *mServices = nullptr;
 	ObjectsScreen *mObjects = nullptr;
 	ObjectsScreen *mFavorites = nullptr;

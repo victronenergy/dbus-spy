@@ -19,14 +19,24 @@ CONFIG += console dbus
 CONFIG -= app_bundle
 DEFINES += VERSION=\\\"$${VERSION}\\\"
 
-LIBS += -lformw -lncursesw
+LIBS += -lformw -lncursesw -lwebsockets
 
 equals(QT_MAJOR_VERSION, 6): QMAKE_CXXFLAGS += -std=c++17
+
+# Local desktop dev builds pull libwebsockets/openssl from homebrew, which
+# isn't on the default search path. The Venus SDK sysroot already has both,
+# so this is a no-op there.
+macx {
+    INCLUDEPATH += $$system(brew --prefix libwebsockets)/include $$system(brew --prefix openssl@3)/include
+    LIBS += -L$$system(brew --prefix libwebsockets)/lib -L$$system(brew --prefix openssl@3)/lib
+}
 
 SOURCES += \
     src/application.cpp \
     src/arguments.cpp \
     src/favorites_list_model.cpp \
+    src/server_child.cpp \
+    src/server.cpp \
     src/list_view.cpp \
     src/main.cpp \
     src/object_list_model.cpp \
@@ -41,6 +51,9 @@ HEADERS += \
     src/application.h \
     src/arguments.h \
     src/favorites_list_model.h \
+    src/server_child.h \
+    src/server_common.h \
+    src/server.h \
     src/list_view.h \
     src/object_list_model.h \
     src/object_listview.h \
@@ -50,7 +63,8 @@ HEADERS += \
     src/search_manager.h \
 
 DISTFILES += \
-    ../README.md
+    ../README.md \
+    graph.html
 
 
 QMAKE_CXXFLAGS *= -ffunction-sections

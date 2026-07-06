@@ -1,0 +1,349 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>dbus-spy graph</title>
+<style>
+  body {
+    background:#1a1a19; color:#ffffff; font-family:monospace; margin:0;
+  }
+  #topbar { display:flex; justify-content:space-between; align-items:flex-start; }
+  #legend { padding:8px; font-size:13px; flex:1; }
+  #legend div { margin-bottom:2px; }
+  #legend .path { color:#c3c2b7; }
+  #legend .minmax { color:#898781; }
+  #controls { padding:8px; font-size:12px; color:#c3c2b7; white-space:nowrap; }
+  #controls select, #controls button { background:#0d0d0d; color:#ffffff; border:1px solid #383835; font-family:monospace; font-size:12px; }
+  #controls button { margin-left:6px; cursor:pointer; }
+  #controls button.active { background:#eda100; color:#1a1a19; border-color:#eda100; }
+  #status { padding:2px 8px; font-size:12px; color:#eda100; display:none; }
+
+  canvas { display:block; width:100vw; height:calc(100vh - 60px); cursor:crosshair; }
+  #tooltip {
+    position:absolute; display:none; white-space:pre-line; pointer-events:none;
+    background:#0d0d0d; color:#ffffff; border:1px solid #383835;
+    padding:6px 8px; font-size:12px; border-radius:4px; z-index:1;
+  }
+</style>
+</head>
+<body>
+<div id="topbar">
+  <div id="legend"></div>
+  <label id="controls">window
+    <select id="window">
+      <option value="30000">30 s</option>
+      <option value="60000" selected>1 min</option>
+      <option value="120000">2 min</option>
+      <option value="300000">5 min</option>
+      <option value="600000">10 min</option>
+    </select>
+    <button id="pauseBtn" type="button">Pause</button>
+  </label>
+</div>
+<div id="status"></div>
+<canvas id="c"></canvas>
+<div id="tooltip"></div>
+<script>
+// Edit this if dbus-spy is running with a non-default --server-port, or if
+// this page is served from somewhere other than the machine you tunnelled
+// --server's port to (e.g. hosted via nginx on the GX itself, or opened
+// directly on your own machine after `ssh -L 57813:localhost:57813 ...`).
+const WS_HOST = 'localhost:57813';
+
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const legend = document.getElementById('legend');
+const tooltip = document.getElementById('tooltip');
+const status = document.getElementById('status');
+const windowSelect = document.getElementById('window');
+windowSelect.addEventListener('change', () => { selectedWindowMs = parseInt(windowSelect.value, 10); });
+const pauseBtn = document.getElementById('pauseBtn');
+let paused = false;
+pauseBtn.addEventListener('click', () => {
+  paused = !paused;
+  pauseBtn.textContent = paused ? 'Resume' : 'Pause';
+  pauseBtn.classList.toggle('active', paused);
+});
+const series = new Map(); // path -> {ts:[], val:[], color}
+// Validated categorical palette (dark surface), fixed assignment order --
+// see the dataviz skill's palette.md. Direct labels in the legend/tooltip
+// are the required mitigation for the two closest-adjacent hues.
+const colors = ['#3987e5','#199e70','#c98500','#008300','#9085e9','#e66767','#d55181','#d95926'];
+let colorIndex = 0;
+const gridColor = '#383835'; // one-step-off-surface gray, matches #controls/tooltip borders
+const mutedText = '#898781'; // matches .minmax
+
+// Matches the <select id="window"> options -- a fixed lookup instead of a
+// generic "nice number" search since the window is never a free-form value.
+const GRID_INTERVALS_MS = { 30000: 5000, 60000: 10000, 120000: 20000, 300000: 60000, 600000: 120000 };
+
+// Retention is independent of the currently displayed window, so widening
+// the window select later still shows whatever history was kept.
+const RETAIN_MS = 10 * 60 * 1000;
+const MIN_WINDOW_MS = 15 * 1000;
+let selectedWindowMs = 60 * 1000;
+let viewLeft = Date.now() - MIN_WINDOW_MS;
+let viewSpan = MIN_WINDOW_MS;
+let hoverTs = null;
+
+function resize() {
+  canvas.width = canvas.clientWidth * devicePixelRatio;
+  canvas.height = canvas.clientHeight * devicePixelRatio;
+}
+window.addEventListener('resize', resize);
+resize();
+
+function seriesFor(path) {
+  let s = series.get(path);
+  if (!s) {
+    s = { ts: [], val: [], color: colors[colorIndex++ % colors.length], min: Infinity, max: -Infinity };
+    series.set(path, s);
+  }
+  return s;
+}
+
+// Recomputes min/max by scanning -- only needed on the rare occasion an
+// evicted sample happened to be the current extreme.
+function recomputeMinMax(s) {
+  s.min = Infinity;
+  s.max = -Infinity;
+  for (const v of s.val) {
+    if (v < s.min) s.min = v;
+    if (v > s.max) s.max = v;
+  }
+}
+
+function pushSample(path, ts, value) {
+  if (typeof value !== 'number') return;
+  const s = seriesFor(path);
+  s.ts.push(ts);
+  s.val.push(value);
+  if (value < s.min) s.min = value;
+  if (value > s.max) s.max = value;
+  const cutoff = Date.now() - RETAIN_MS;
+  let evictedExtreme = false;
+  while (s.ts.length && s.ts[0] < cutoff) {
+    const removed = s.val.shift();
+    s.ts.shift();
+    if (removed === s.min || removed === s.max) evictedExtreme = true;
+  }
+  // Tracked incrementally rather than Math.min(...s.val)/Math.max(...s.val)
+  // every animation frame: without batching, a fast-changing D-Bus value can
+  // grow a series into the tens of thousands of samples within a couple of
+  // minutes, and spreading an array that large into Math.min/max throws
+  // "Maximum call stack size exceeded" -- which silently kills the
+  // requestAnimationFrame loop for good, since the exception happens before
+  // draw()'s own recursive rAF call.
+  if (evictedExtreme) recomputeMinMax(s);
+}
+
+// The window grows from MIN_WINDOW_MS to fit however much history actually
+// exists yet, up to the selected window size -- otherwise a chart that just
+// started (seconds of data) renders squeezed into a sliver at one edge of a
+// scale sized for the full window. Once there's enough history to fill the
+// selected span, it becomes a true fixed-width sliding window: older points
+// scroll off the left edge as new ones arrive.
+function updateView() {
+  if (paused) return; // freeze the displayed window; incoming samples keep accumulating underneath
+  const now = Date.now();
+  let oldest = now;
+  for (const s of series.values())
+    if (s.ts.length && s.ts[0] < oldest) oldest = s.ts[0];
+  viewSpan = Math.min(selectedWindowMs, Math.max(MIN_WINDOW_MS, now - oldest));
+  viewLeft = now - viewSpan;
+}
+
+function renderTooltip(clientX, clientY) {
+  if (hoverTs === null || !series.size) {
+    tooltip.style.display = 'none';
+    return;
+  }
+  const lines = [new Date(hoverTs).toLocaleTimeString()];
+  for (const [path, s] of series) {
+    if (!s.ts.length) continue;
+    let bestIdx = 0, bestDist = Infinity;
+    for (let i = 0; i < s.ts.length; ++i) {
+      const d = Math.abs(s.ts[i] - hoverTs);
+      if (d < bestDist) { bestDist = d; bestIdx = i; }
+    }
+    lines.push(`${path}: ${s.val[bestIdx]}`);
+  }
+  tooltip.textContent = lines.join('\n'); // textContent, never innerHTML -- path names are untrusted data
+  tooltip.style.display = 'block';
+  tooltip.style.left = (clientX + 16) + 'px';
+  tooltip.style.top = (clientY + 16) + 'px';
+}
+
+canvas.addEventListener('mousemove', (ev) => {
+  const rect = canvas.getBoundingClientRect();
+  hoverTs = viewLeft + ((ev.clientX - rect.left) / rect.width) * viewSpan;
+  renderTooltip(ev.clientX, ev.clientY);
+});
+canvas.addEventListener('mouseleave', () => {
+  hoverTs = null;
+  tooltip.style.display = 'none';
+});
+
+// A single uncaught exception in here would otherwise permanently kill the
+// rAF loop (the callback aborts before reaching its own requestAnimationFrame
+// call below) -- with no visible error, that looks exactly like "stopped
+// updating". drawFrame() is left to fail loudly; draw() guarantees the loop
+// itself always continues regardless.
+function draw() {
+  try {
+    drawFrame();
+  } catch (e) {
+    console.error('dbus-spy graph: draw() failed, continuing', e);
+  }
+  requestAnimationFrame(draw);
+}
+
+function drawFrame() {
+  updateView();
+  ctx.fillStyle = '#1a1a19';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const rowH = canvas.height / Math.max(series.size, 1);
+
+  // Vertical time gridlines: fixed spacing so elapsed time between two points
+  // on any lane can be read at a glance, without needing the tooltip.
+  const gridStep = GRID_INTERVALS_MS[selectedWindowMs] || selectedWindowMs / 6;
+  ctx.strokeStyle = gridColor;
+  ctx.lineWidth = devicePixelRatio;
+  ctx.fillStyle = mutedText;
+  ctx.font = `${10 * devicePixelRatio}px monospace`;
+  ctx.textAlign = 'center';
+  const gridStart = Math.ceil(viewLeft / gridStep) * gridStep;
+  for (let t = gridStart; t <= viewLeft + viewSpan; t += gridStep) {
+    const x = ((t - viewLeft) / viewSpan) * canvas.width;
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, canvas.height);
+    ctx.stroke();
+    ctx.fillText(new Date(t).toLocaleTimeString(), x, canvas.height - 4 * devicePixelRatio);
+  }
+
+  // Lane separators: one hairline per boundary between stacked series, so a
+  // fast-moving lane doesn't visually bleed into its quieter neighbor.
+  ctx.strokeStyle = gridColor;
+  ctx.lineWidth = devicePixelRatio;
+  for (let row = 1; row < series.size; ++row) {
+    const y = row * rowH;
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(canvas.width, y);
+    ctx.stroke();
+  }
+
+  let row = 0;
+  legend.textContent = '';
+  for (const [path, s] of series) {
+    const top = row * rowH;
+    if (s.val.length) {
+      const rawMin = s.min, rawMax = s.max;
+      let min = rawMin, max = rawMax;
+      if (min === max) { min -= 1; max += 1; } // y-scale only; legend shows the raw values
+      const xFor = (t) => ((t - viewLeft) / viewSpan) * canvas.width;
+      const yFor = (v) => top + rowH - ((v - min) / (max - min)) * (rowH - 8) - 4;
+      ctx.strokeStyle = s.color;
+      ctx.lineWidth = 2 * devicePixelRatio;
+      if (s.val.length > 1) {
+        ctx.beginPath();
+        for (let i = 0; i < s.ts.length; ++i) {
+          const x = xFor(s.ts[i]), y = yFor(s.val[i]);
+          i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+      // A line needs 2+ points to be visible; mark the latest sample with a
+      // dot so a series shows up immediately, not just once it has history.
+      ctx.fillStyle = s.color;
+      ctx.beginPath();
+      ctx.arc(xFor(s.ts[s.ts.length - 1]), yFor(s.val[s.val.length - 1]), 4 * devicePixelRatio, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Short lane label (last two path segments) so a lane is identifiable
+      // without tracing its color back up to the legend. Drawn over the line
+      // with its own backdrop -- otherwise it collides unreadably whenever
+      // the series happens to pass through the lane's top-left corner.
+      const laneLabel = path.split('/').slice(-2).join('/');
+      ctx.font = `${11 * devicePixelRatio}px monospace`;
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      const labelW = ctx.measureText(laneLabel).width;
+      ctx.fillStyle = 'rgba(26,26,25,0.75)';
+      ctx.fillRect(2 * devicePixelRatio, top + 2 * devicePixelRatio, labelW + 6 * devicePixelRatio, 15 * devicePixelRatio);
+      ctx.fillStyle = mutedText;
+      ctx.fillText(laneLabel, 5 * devicePixelRatio, top + 4 * devicePixelRatio);
+      ctx.textBaseline = 'alphabetic';
+
+      const last = s.val[s.val.length - 1];
+      const item = document.createElement('div');
+      const key = document.createElement('span');
+      key.style.color = s.color;
+      key.textContent = '— ';
+      const label = document.createElement('span');
+      label.className = 'path';
+      label.textContent = `${path}: `;
+      const value = document.createElement('strong');
+      value.textContent = String(last);
+      const minmax = document.createElement('span');
+      minmax.className = 'minmax';
+      minmax.textContent = `  (min ${rawMin}, max ${rawMax})`;
+      item.append(key, label, value, minmax);
+      legend.appendChild(item);
+    }
+    row++;
+  }
+  if (hoverTs !== null) {
+    const x = ((hoverTs - viewLeft) / viewSpan) * canvas.width;
+    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+    ctx.lineWidth = devicePixelRatio;
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, canvas.height);
+    ctx.stroke();
+  }
+}
+requestAnimationFrame(draw);
+
+let ws = null;
+let reconnectAttempts = 0;
+const MAX_RECONNECT_DELAY_MS = 5000;
+
+function scheduleReconnect(reason) {
+  // Backs off (capped low, so a real disconnect never stalls the chart for
+  // long) so a browser tab left open after dbus-spy quits doesn't hammer the
+  // SSH tunnel with connection-refused attempts forever.
+  const delay = Math.min(1000 * (2 ** reconnectAttempts), MAX_RECONNECT_DELAY_MS);
+  reconnectAttempts++;
+  console.log(`dbus-spy graph: disconnected (${reason}), reconnecting in ${delay}ms (attempt ${reconnectAttempts})`);
+  status.textContent = `Disconnected -- retrying in ${Math.round(delay / 1000)}s`;
+  status.style.display = 'block';
+  setTimeout(connect, delay);
+}
+
+function connect() {
+  ws = new WebSocket(`ws://${WS_HOST}/`, 'dbus-spy');
+  ws.onopen = () => {
+    reconnectAttempts = 0;
+    status.style.display = 'none';
+  };
+  ws.onmessage = (ev) => {
+    reconnectAttempts = 0; // actively receiving data -- this connection is healthy
+    const msg = JSON.parse(ev.data);
+    if (msg.type === 'backfill') {
+      for (const path in msg.series)
+        for (const [ts, value] of msg.series[path])
+          pushSample(path, ts, value);
+    } else if (msg.type === 'update') {
+      pushSample(msg.path, msg.ts, msg.value);
+    } else if (msg.type === 'remove') {
+      series.delete(msg.path);
+    }
+  };
+  ws.onclose = (ev) => scheduleReconnect(`code ${ev.code}${ev.reason ? ' ' + ev.reason : ''}`);
+}
+connect();
+</script>
+</body>
+</html>
