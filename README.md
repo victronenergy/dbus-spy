@@ -31,6 +31,7 @@ History properties are hidden by default and can be enabled with a command line 
   Press `f` again to remove it from the list.
 * `g`: get the item from the service (again).
 * `F`: switch to/from the favorites list.
+* `+`/`-`: in the favorites list, move the current item up/down to reorder it.
 * `r`: refresh the screen
 * `/`: start searching for a string
 * `n`: search for next hit forwards
