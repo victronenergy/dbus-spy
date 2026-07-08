@@ -36,6 +36,7 @@ private:
 	QString getEditValue() const;
 	void startEdit(const QString &description, const QString &text);
 	void endEdit();
+	void applyFavoriteRange(int lo, int hi, bool add);
 
 	WINDOW *mTitleWindow = nullptr;
 	WINDOW *mListViewWindow = nullptr;
@@ -45,6 +46,7 @@ private:
 	WINDOW *mEditWindow = nullptr;
 	FIELD *mEditFields[2];
 	FORM *mEditForm = nullptr;
+	int mPendingCount = 0;
 };
 
 #endif

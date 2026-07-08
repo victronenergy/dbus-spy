@@ -33,6 +33,11 @@ History properties are hidden by default and can be enabled with a command line 
 * `q`: quit the apllication. ctrl-c will do the same job
 * `f`: add the current item to the list of favorites. The item will light up after it has been added.
   Press `f` again to remove it from the list.
+* `<count>f`, e.g. `5f`: favorite (or un-favorite, matching the current item's state) the next
+  `<count>` items starting at the cursor, then move past them.
+* `V`: start a range selection at the cursor; move around as usual to extend it (highlighted),
+  then press `f` to favorite/un-favorite the whole range (matching the current item's state), or
+  `esc` to cancel.
 * `g`: get the item from the service (again).
 * `F`: switch to/from the favorites list.
 * `+`/`-`: in the favorites list, move the current item up/down to reorder it.
