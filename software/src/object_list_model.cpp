@@ -49,6 +49,156 @@ int ObjectListModel::indexOf(VeQItem *item) const
 	return mItems.indexOf(item);
 }
 
+// The ancestor of `item` at the nearest point, walking up from `item`, where the tree
+// actually forks into more than one real sub-item -- i.e. the closest enclosing "collection".
+// This is deliberately relative to `item` rather than fixed for the whole list: a service
+// like Settings mostly forks once, right under its single "Settings" wrapper, into categories
+// like DigitalInput/DynamicEss -- but a category can itself contain a real sub-collection
+// (e.g. DynamicEss/Schedule/0.../54, each holding several leaf properties), and once the
+// selection is inside one of those, jumping should work at *that* level, not haul all the way
+// back out to the top category every time. So: keep climbing past a level as long as it isn't
+// a genuine fork (0 or 1 branch children -- a wrapper or a uniform leaf-only node), and stop
+// at the first level with more than one branch child.
+//
+// A level with unrelated flat leaf properties alongside its real branch children (e.g.
+// com.victronenergy.system has Ac/Dc/... categories sitting next to loose scalars like
+// Connected/Serial/ProductId right at the root) would otherwise give each of those leaves its
+// own singleton group, degenerating Tab into one-item-at-a-time stepping through long runs of
+// them. So when the found fork's child on our path is itself a leaf, every such leaf at that
+// level collapses into one shared "everything else" group (identified by the fork itself)
+// instead -- Tab always lands on a real (sub-)category or the start of a run of loose
+// properties, never mid-run.
+//
+// Two items are in the same group iff this returns the same ancestor for both.
+VeQItem *ObjectListModel::groupAncestor(VeQItem *item) const
+{
+	VeQItem *node = item;
+	for (;;) {
+		VeQItem *parent = node->itemParent();
+		if (parent == nullptr)
+			return node;
+		int branchCount = 0;
+		for (VeQItem *child: parent->itemChildren()) {
+			if (!child->isLeaf())
+				++branchCount;
+		}
+		if (branchCount > 1)
+			return node->isLeaf() ? parent : node;
+		if (parent == mRoot)
+			return node;
+		node = parent;
+	}
+}
+
+int ObjectListModel::nextGroup(int index) const
+{
+	int n = mItems.size();
+	if (index < 0 || index >= n)
+		return -1;
+	VeQItem *group = groupAncestor(mItems[index]);
+	for (int step = 1; step <= n; ++step) {
+		int i = (index + step) % n;
+		if (groupAncestor(mItems[i]) != group)
+			return i;
+	}
+	return -1; // only one group in the whole list
+}
+
+int ObjectListModel::previousGroup(int index) const
+{
+	int n = mItems.size();
+	if (index < 0 || index >= n)
+		return -1;
+	VeQItem *group = groupAncestor(mItems[index]);
+	// Step back past the current group to somewhere in the previous one.
+	int i = index;
+	for (int step = 1; step <= n; ++step) {
+		i = (index - step + n) % n;
+		if (groupAncestor(mItems[i]) != group)
+			break;
+		if (step == n)
+			return -1; // only one group in the whole list
+	}
+	// Walk back further to the first item of that (previous) group.
+	VeQItem *prevGroup = groupAncestor(mItems[i]);
+	for (;;) {
+		int j = (i - 1 + n) % n;
+		if (j == index || groupAncestor(mItems[j]) != prevGroup)
+			break;
+		i = j;
+	}
+	return i;
+}
+
+// Like groupAncestor(), but fixed for the whole list instead of relative to `item`: always the
+// outermost fork, found by descending from mRoot through single-branch wrapper chains (same
+// leaf-lumping rule as groupAncestor() once there). Used for nextSection()/previousSection(),
+// which -- unlike nextGroup()/previousGroup() -- always jump between top-level sections
+// (Settings/DigitalInput to Settings/DynamicEss) no matter how deep `index` currently is.
+VeQItem *ObjectListModel::sectionAncestor(VeQItem *item) const
+{
+	VeQItem *effectiveRoot = mRoot;
+	for (;;) {
+		VeQItem *onlyBranch = nullptr;
+		int branchCount = 0;
+		for (VeQItem *child: effectiveRoot->itemChildren()) {
+			if (!child->isLeaf()) {
+				++branchCount;
+				onlyBranch = child;
+			}
+		}
+		if (branchCount != 1)
+			break;
+		effectiveRoot = onlyBranch;
+	}
+	VeQItem *node = item;
+	while (node != nullptr && node->itemParent() != effectiveRoot)
+		node = node->itemParent();
+	if (node == nullptr)
+		return item;
+	return node->isLeaf() ? effectiveRoot : node;
+}
+
+int ObjectListModel::nextSection(int index) const
+{
+	int n = mItems.size();
+	if (index < 0 || index >= n)
+		return -1;
+	VeQItem *section = sectionAncestor(mItems[index]);
+	for (int step = 1; step <= n; ++step) {
+		int i = (index + step) % n;
+		if (sectionAncestor(mItems[i]) != section)
+			return i;
+	}
+	return -1; // only one section in the whole list
+}
+
+int ObjectListModel::previousSection(int index) const
+{
+	int n = mItems.size();
+	if (index < 0 || index >= n)
+		return -1;
+	VeQItem *section = sectionAncestor(mItems[index]);
+	// Step back past the current section to somewhere in the previous one.
+	int i = index;
+	for (int step = 1; step <= n; ++step) {
+		i = (index - step + n) % n;
+		if (sectionAncestor(mItems[i]) != section)
+			break;
+		if (step == n)
+			return -1; // only one section in the whole list
+	}
+	// Walk back further to the first item of that (previous) section.
+	VeQItem *prevSection = sectionAncestor(mItems[i]);
+	for (;;) {
+		int j = (i - 1 + n) % n;
+		if (j == index || sectionAncestor(mItems[j]) != prevSection)
+			break;
+		i = j;
+	}
+	return i;
+}
+
 void ObjectListModel::onChildAdded(VeQItem *item)
 {
 	if (mRecursive || item->itemParent() == mRoot)
