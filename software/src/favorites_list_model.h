@@ -23,6 +23,13 @@ public:
 	void removeItem(VeQItem *item);
 	bool hasItem(VeQItem *item) const;
 	bool isServiceRoot(VeQItem *item) const;
+	bool moveUp(VeQItem *item);
+	bool moveDown(VeQItem *item);
+
+signals:
+	// Emitted after moveUp()/moveDown() actually change the order (not on
+	// addItem()/removeItem(), which already signal via rowsInserted/rowsRemoved).
+	void orderChanged();
 
 private slots:
 	void onServiceAdded(VeQItem *item);
@@ -33,6 +40,9 @@ private:
 	void connectItem(VeQItem *item);
 	void disconnectItem(VeQItem *item);
 	VeQItem *getServiceRoot(VeQItem *item) const;
+	int groupStart(VeQItem *serviceRoot) const;
+	int groupEnd(int start) const;
+	bool moveItem(VeQItem *item, int offset);
 
 	QList<VeQItem *> mItems;
 	// Workaround for a problem in VeQItems: if an item pointing to an object within a D-Bus service

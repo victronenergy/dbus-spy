@@ -113,6 +113,23 @@ function recomputeMinMax(s) {
   }
 }
 
+// Map iteration order (which drives both the stacked lanes and the legend
+// list, see drawFrame()) is insertion order -- so reordering means rebuilding
+// the Map in the new order. Paths not yet in `series` (favorited but no
+// numeric sample yet) are simply skipped; paths missing from `paths` (there
+// shouldn't be any) keep their relative position at the end.
+function reorderSeries(paths) {
+  const ordered = [];
+  for (const path of paths) {
+    const s = series.get(path);
+    if (s) ordered.push([path, s]);
+  }
+  for (const entry of series)
+    if (!paths.includes(entry[0])) ordered.push(entry);
+  series.clear();
+  for (const [path, s] of ordered) series.set(path, s);
+}
+
 function pushSample(path, ts, value) {
   if (typeof value !== 'number') return;
   const s = seriesFor(path);
@@ -339,6 +356,8 @@ function connect() {
       pushSample(msg.path, msg.ts, msg.value);
     } else if (msg.type === 'remove') {
       series.delete(msg.path);
+    } else if (msg.type === 'order') {
+      reorderSeries(msg.paths);
     }
   };
   ws.onclose = (ev) => scheduleReconnect(`code ${ev.code}${ev.reason ? ' ' + ev.reason : ''}`);

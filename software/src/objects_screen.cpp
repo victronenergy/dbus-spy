@@ -63,10 +63,24 @@ bool ObjectsScreen::handleInput(wint_t c)
 			mListView->updateItem(item);
 			return true;
 		}
+		case '+':
+		case '-':
+		{
+			if (mModel != mFavorites)
+				return false;
+			int row = mListView->getSelection();
+			VeQItem *item = mListView->model()->getItem(row);
+			bool moved = c == '+' ? mFavorites->moveUp(item) : mFavorites->moveDown(item);
+			if (moved)
+				mListView->setSelection(mFavorites->indexOf(item));
+			return true;
+		}
 		case 'g':
 		{
 			int row = mListView->getSelection();
 			VeQItem *item = mListView->model()->getItem(row);
+			if (item == nullptr)
+				return true;
 			if (mListView->showText())
 				item->getText(true);
 			else

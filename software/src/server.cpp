@@ -113,6 +113,8 @@ void Server::attach(FavoritesListModel *favorites)
 	        this, &Server::onFavoritesRowsInserted);
 	connect(favorites, &QAbstractItemModel::rowsAboutToBeRemoved,
 	        this, &Server::onFavoritesRowsAboutToBeRemoved);
+	connect(favorites, &FavoritesListModel::orderChanged,
+	        this, &Server::onFavoritesOrderChanged);
 	for (int i = 0; i < favorites->rowCount(); ++i) {
 		VeQItem *item = favorites->getItem(i);
 		if (item != nullptr && !favorites->isServiceRoot(item))
@@ -128,6 +130,11 @@ void Server::onFavoritesRowsInserted(const QModelIndex &parent, int first, int l
 		if (item != nullptr && !mFavorites->isServiceRoot(item))
 			trackItem(item);
 	}
+}
+
+void Server::onFavoritesOrderChanged()
+{
+	sendOrder();
 }
 
 void Server::onFavoritesRowsAboutToBeRemoved(const QModelIndex &parent, int first, int last)
@@ -198,5 +205,22 @@ void Server::sendRemove(const QByteArray &path)
 	if (mFd < 0)
 		return;
 	QByteArray line = "R\t" + path + '\n';
+	write(mFd, line.constData(), line.size());
+}
+
+void Server::sendOrder()
+{
+	if (mFd < 0 || mFavorites == nullptr)
+		return;
+	QByteArray paths;
+	for (int i = 0; i < mFavorites->rowCount(); ++i) {
+		VeQItem *item = mFavorites->getItem(i);
+		if (item == nullptr || mFavorites->isServiceRoot(item))
+			continue;
+		if (!paths.isEmpty())
+			paths += ',';
+		paths += item->uniqueId().toUtf8();
+	}
+	QByteArray line = "O\t" + paths + '\n';
 	write(mFd, line.constData(), line.size());
 }

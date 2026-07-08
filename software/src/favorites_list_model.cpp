@@ -132,6 +132,16 @@ bool FavoritesListModel::isServiceRoot(VeQItem *item) const
 	return item->itemParent() == mRoot;
 }
 
+bool FavoritesListModel::moveUp(VeQItem *item)
+{
+	return moveItem(item, -1);
+}
+
+bool FavoritesListModel::moveDown(VeQItem *item)
+{
+	return moveItem(item, 1);
+}
+
 void FavoritesListModel::onServiceAdded(VeQItem *item)
 {
 	QString serviceName = item->id();
@@ -197,4 +207,82 @@ VeQItem *FavoritesListModel::getServiceRoot(VeQItem *item) const
 		prev = item;
 	}
 	return nullptr;
+}
+
+int FavoritesListModel::groupStart(VeQItem *serviceRoot) const
+{
+	return mItems.indexOf(serviceRoot);
+}
+
+int FavoritesListModel::groupEnd(int start) const
+{
+	for (int i = start + 1; i < mItems.size(); ++i) {
+		if (isServiceRoot(mItems[i]))
+			return i;
+	}
+	return mItems.size();
+}
+
+bool FavoritesListModel::moveItem(VeQItem *item, int offset)
+{
+	if (item == nullptr)
+		return false;
+	int i = mItems.indexOf(item);
+	if (i == -1)
+		return false;
+
+	if (isServiceRoot(item)) {
+		// Move the whole group (service root + its favorite items) up or down, swapping it
+		// with the adjacent group.
+		int start = i;
+		int end = groupEnd(start);
+		int otherStart;
+		int otherEnd;
+		if (offset < 0) {
+			otherEnd = start;
+			otherStart = -1;
+			for (int j = start - 1; j >= 0; --j) {
+				if (isServiceRoot(mItems[j])) {
+					otherStart = j;
+					break;
+				}
+			}
+			if (otherStart == -1)
+				return false;
+		} else {
+			if (end >= mItems.size())
+				return false;
+			otherStart = end;
+			otherEnd = groupEnd(otherStart);
+		}
+		QList<VeQItem *> group = mItems.mid(start, end - start);
+		QList<VeQItem *> other = mItems.mid(otherStart, otherEnd - otherStart);
+		// group and other are adjacent (otherStart == end or otherEnd == start), so together
+		// they form one contiguous range: remove it as a whole in one reverse pass (removing
+		// group and other via two separately-indexed passes is wrong -- removing the first
+		// range shifts the indices the second pass still relies on) and reinsert it reordered.
+		int lo = qMin(start, otherStart);
+		int hi = qMax(end, otherEnd);
+		for (int j = hi - 1; j >= lo; --j)
+			mItems.removeAt(j);
+		QList<VeQItem *> merged = offset < 0 ? group + other : other + group;
+		for (int j = 0; j < merged.size(); ++j)
+			mItems.insert(lo + j, merged[j]);
+		emit dataChanged(index(lo), index(lo + merged.size() - 1));
+	} else {
+		VeQItem *serviceRoot = getServiceRoot(item);
+		int start = groupStart(serviceRoot);
+		int end = groupEnd(start);
+		int j = i + offset;
+		// The first entry of a group is the service root itself, so favorite items can only
+		// be reordered among the other entries of their own group.
+		if (j <= start || j >= end)
+			return false;
+		mItems[i] = mItems[j];
+		mItems[j] = item;
+		emit dataChanged(index(qMin(i, j)), index(qMax(i, j)));
+	}
+	adjustSettings();
+	emit orderChanged();
+	return true;
 }

@@ -26,6 +26,7 @@ public:
 private slots:
 	void onFavoritesRowsInserted(const QModelIndex &parent, int first, int last);
 	void onFavoritesRowsAboutToBeRemoved(const QModelIndex &parent, int first, int last);
+	void onFavoritesOrderChanged();
 	void onValueChanged();
 	void onItemDestroyed();
 
@@ -35,6 +36,7 @@ private:
 	void trackItem(VeQItem *item);
 	void sendSample(VeQItem *item);
 	void sendRemove(const QByteArray &path);
+	void sendOrder();
 
 	int mFd = -1;
 	FavoritesListModel *mFavorites = nullptr;

@@ -105,6 +105,19 @@ std::string buildBacklogJson(const RingMap &rings)
     return json;
 }
 
+// D-Bus object paths are restricted to [A-Za-z0-9_/], so no JSON escaping is
+// needed for any path in `paths` (same assumption buildBacklogJson() makes).
+std::string buildOrderJson(const std::vector<std::string> &paths)
+{
+    std::string json = R"({"type":"order","paths":[)";
+    for (size_t i = 0; i < paths.size(); ++i) {
+        if (i) json += ",";
+        json += "\"" + paths[i] + "\"";
+    }
+    json += "]}";
+    return json;
+}
+
 void broadcastToAllSessions(const std::string &msg)
 {
     for (struct lws *wsi : *gClients) {
@@ -238,7 +251,8 @@ int wsCallback(struct lws *wsi, enum lws_callback_reasons reason, void *user, vo
                 std::string line = pendingLine.substr(0, nl);
                 pendingLine.erase(0, nl + 1);
                 // Line formats from the parent: "S\t<path>\t<ts>\t<value>"
-                // (sample) or "R\t<path>" (a favorite was removed).
+                // (sample), "R\t<path>" (a favorite was removed), or
+                // "O\t<path>,<path>,..." (favorites were reordered).
                 size_t t0 = line.find('\t');
                 if (t0 == std::string::npos)
                     continue;
@@ -268,6 +282,40 @@ int wsCallback(struct lws *wsi, enum lws_callback_reasons reason, void *user, vo
                                                 [&](const auto &entry) { return entry.first == path; }),
                                 rings.end());
                     broadcastToAllSessions("{\"type\":\"remove\",\"path\":\"" + path + "\"}");
+                } else if (cmd == "O") {
+                    // rest is a comma-separated, favorites-ordered list of paths (empty if
+                    // there are no favorites left). Re-sort `rings` to match so a client that
+                    // (re)connects later gets the right order in its backfill too.
+                    std::vector<std::string> order;
+                    size_t pos = 0;
+                    while (pos <= rest.size()) {
+                        size_t comma = rest.find(',', pos);
+                        std::string path = rest.substr(pos, comma == std::string::npos ? std::string::npos : comma - pos);
+                        if (!path.empty())
+                            order.push_back(path);
+                        if (comma == std::string::npos)
+                            break;
+                        pos = comma + 1;
+                    }
+
+                    RingMap reordered;
+                    reordered.reserve(rings.size());
+                    for (const auto &path : order) {
+                        auto it = std::find_if(rings.begin(), rings.end(),
+                                                [&](const auto &entry) { return entry.first == path; });
+                        if (it != rings.end()) {
+                            reordered.push_back(std::move(*it));
+                            rings.erase(it);
+                        }
+                    }
+                    // Anything left wasn't in the order list (e.g. a non-numeric favorite,
+                    // which never gets an "S" line and so has no ring here anyway) -- keep
+                    // it at the tail rather than dropping it.
+                    for (auto &entry : rings)
+                        reordered.push_back(std::move(entry));
+                    rings = std::move(reordered);
+
+                    broadcastToAllSessions(buildOrderJson(order));
                 }
             }
         }
