@@ -58,7 +58,10 @@ void ListView::setSelection(int s)
 		si += 5;
 	while (si > s)
 		si -= 5;
-	if (si == mStartIndex) {
+	// With a range active, moving the selection can change the highlighted state of rows other
+	// than just the old/new selection (everything between the anchor and the new position), so
+	// fall back to a full redraw instead of the two-row fast path.
+	if (si == mStartIndex && mRangeAnchor == -1) {
 		int os = mSelectionIndex;
 		mSelectionIndex = s;
 		redrawRows(os, os);
@@ -69,6 +72,32 @@ void ListView::setSelection(int s)
 		redraw();
 	}
 	wrefresh(mWindow);
+}
+
+void ListView::startRange()
+{
+	mRangeAnchor = mSelectionIndex;
+	redraw();
+	wrefresh(mWindow);
+}
+
+void ListView::cancelRange()
+{
+	if (mRangeAnchor == -1)
+		return;
+	mRangeAnchor = -1;
+	redraw();
+	wrefresh(mWindow);
+}
+
+bool ListView::hasRange() const
+{
+	return mRangeAnchor != -1;
+}
+
+int ListView::rangeAnchor() const
+{
+	return mRangeAnchor;
 }
 
 bool ListView::handleInput(int c)
@@ -200,7 +229,11 @@ void ListView::_redrawRow(int index)
 	int r = index - mStartIndex;
 	if (r >= getListHeight())
 		return;
-	int attr = index == mSelectionIndex ? (COLOR_PAIR(3) | A_STANDOUT) : COLOR_PAIR(2);
+	bool inRange = mRangeAnchor != -1
+		&& index >= qMin(mRangeAnchor, mSelectionIndex)
+		&& index <= qMax(mRangeAnchor, mSelectionIndex);
+	int attr = index == mSelectionIndex ? (COLOR_PAIR(3) | A_STANDOUT) :
+		inRange ? COLOR_PAIR(3) : COLOR_PAIR(2);
 	if (isEmphasized(index))
 		attr |= A_BOLD;
 	wattron(mWindow, attr);

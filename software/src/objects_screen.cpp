@@ -37,6 +37,15 @@ bool ObjectsScreen::handleInput(wint_t c)
 {
 	if (mEditForm == nullptr)
 	{
+		if (c >= '0' && c <= '9')
+		{
+			int digit = int(c) - '0';
+			if (!(digit == 0 && mPendingCount == 0))
+				mPendingCount = mPendingCount * 10 + digit;
+			return true;
+		}
+		int count = mPendingCount;
+		mPendingCount = 0;
 		switch (c)
 		{
 		case KEY_LEFT:
@@ -50,17 +59,47 @@ bool ObjectsScreen::handleInput(wint_t c)
 			startEdit("Edit value: ", mListView->getValue(mListView->getSelection()));
 			refresh();
 			return true;
+		case 'V':
+			if (mListView->hasRange())
+				mListView->cancelRange();
+			else
+				mListView->startRange();
+			return true;
+		case 0x1B: // escape
+			if (!mListView->hasRange())
+				return false;
+			mListView->cancelRange();
+			return true;
 		case 'f':
 		{
 			int row = mListView->getSelection();
 			VeQItem *item = mListView->model()->getItem(row);
-			if (mFavorites->hasItem(item))
-				mFavorites->removeItem(item);
+			if (item == nullptr)
+				return true;
+			bool add = !mFavorites->hasItem(item);
+			if (mListView->hasRange())
+			{
+				int lo = qMin(mListView->rangeAnchor(), row);
+				int hi = qMax(mListView->rangeAnchor(), row);
+				applyFavoriteRange(lo, hi, add);
+				mListView->cancelRange();
+			}
+			else if (count > 1)
+			{
+				int hi = qMin(row + count - 1, mListView->model()->rowCount() - 1);
+				applyFavoriteRange(row, hi, add);
+				mListView->setSelection(qMin(hi + 1, mListView->model()->rowCount() - 1));
+			}
 			else
-				mFavorites->addItem(item);
-			/// @todo EV Ugly construction. updateItem should be called by the listview via signals
-			/// from mFavorites.
-			mListView->updateItem(item);
+			{
+				if (add)
+					mFavorites->addItem(item);
+				else
+					mFavorites->removeItem(item);
+				/// @todo EV Ugly construction. updateItem should be called by the listview via signals
+				/// from mFavorites.
+				mListView->updateItem(item);
+			}
 			return true;
 		}
 		case '+':
@@ -185,6 +224,20 @@ bool ObjectsScreen::handleInput(wint_t c)
 
 		return true;
 	}
+}
+
+void ObjectsScreen::applyFavoriteRange(int lo, int hi, bool add)
+{
+	for (int i = lo; i <= hi; ++i) {
+		VeQItem *item = mListView->model()->getItem(i);
+		if (item == nullptr)
+			continue;
+		if (add && !mFavorites->hasItem(item))
+			mFavorites->addItem(item);
+		else if (!add && mFavorites->hasItem(item))
+			mFavorites->removeItem(item);
+	}
+	repaint();
 }
 
 void ObjectsScreen::repaint()

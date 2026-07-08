@@ -22,6 +22,14 @@ public:
 	virtual void redraw();
 	virtual void redrawRows(int startIndex, int endIndex);
 
+	// Range-select: anchor the range at the current selection, so rows between the anchor and
+	// wherever the selection moves to are highlighted, until cancelRange() (or another
+	// startRange()) is called. Used by ObjectsScreen for bulk favoriting.
+	void startRange();
+	void cancelRange();
+	bool hasRange() const;
+	int rangeAnchor() const;
+
 protected:
 	virtual void drawRow(int index, int width) const;
 	virtual bool isEmphasized(int index) const;
@@ -41,6 +49,7 @@ private:
 	QTimer *mRedrawTimer = nullptr;
 	int mStartIndex = 0;
 	int mSelectionIndex = 0;
+	int mRangeAnchor = -1;
 };
 
 #endif
