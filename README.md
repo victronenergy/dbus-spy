@@ -24,6 +24,10 @@ History properties are hidden by default and can be enabled with a command line 
 * `right-arrow`: open the selected D-Bus service and show the list of properties
 * `left-arrow`: go back to the service list
 * `up/down-arrow`, `page up/down`: move up/down (yes, really!)
+* `tab`/`shift-tab`: jump to the next/previous group of items relative to where you are (e.g. from
+  Settings/DynamicEss/Schedule/23 to Schedule/24), wrapping around at the ends.
+* `]`/`[`: same, but always at the top level regardless of how deep you are (e.g. from anywhere
+  inside Settings/DynamicEss straight to Settings/SystemSetup), wrapping around at the ends.
 * `enter`: edit the value of the current property
 * `t`: switch between property values and text
 * `q`: quit the apllication. ctrl-c will do the same job

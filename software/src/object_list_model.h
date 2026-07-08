@@ -17,6 +17,10 @@ public:
 	VeQItem *getItem(int index) const override;
 	QString getItemName(VeQItem *item) const override;
 	int indexOf(VeQItem *item) const override;
+	int nextGroup(int index) const override;
+	int previousGroup(int index) const override;
+	int nextSection(int index) const override;
+	int previousSection(int index) const override;
 
 signals:
 	void pathChanged();
@@ -33,6 +37,8 @@ private:
 	bool tryInsertItem(VeQItem *item);
 	void removeItem(VeQItem *item);
 	void disconnectItems(VeQItem *item);
+	VeQItem *groupAncestor(VeQItem *item) const;
+	VeQItem *sectionAncestor(VeQItem *item) const;
 
 	VeQItem *mRoot = nullptr;
 	bool mRecursive = false;

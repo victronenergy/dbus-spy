@@ -87,6 +87,38 @@ bool ListView::handleInput(int c)
 	case KEY_PPAGE:
 		setSelection(mSelectionIndex - getListHeight());
 		break;
+	case '\t':
+	{
+		int n = mModel == nullptr ? -1 : mModel->nextGroup(mSelectionIndex);
+		if (n == -1)
+			return false;
+		setSelection(n);
+		break;
+	}
+	case KEY_BTAB:
+	{
+		int p = mModel == nullptr ? -1 : mModel->previousGroup(mSelectionIndex);
+		if (p == -1)
+			return false;
+		setSelection(p);
+		break;
+	}
+	case ']':
+	{
+		int n = mModel == nullptr ? -1 : mModel->nextSection(mSelectionIndex);
+		if (n == -1)
+			return false;
+		setSelection(n);
+		break;
+	}
+	case '[':
+	{
+		int p = mModel == nullptr ? -1 : mModel->previousSection(mSelectionIndex);
+		if (p == -1)
+			return false;
+		setSelection(p);
+		break;
+	}
 	default:
 		return false;
 	}
