@@ -248,6 +248,30 @@ void ObjectsScreen::repaint()
 	wrefresh(mListViewWindow);
 }
 
+void ObjectsScreen::resize()
+{
+	// The edit form/window is anchored to absolute coordinates computed at startEdit() time,
+	// so it can't just be wresize()'d in place — tear it down (preserving what was typed so
+	// far) and recreate it below at the new coordinates once the screen itself is resized.
+	bool wasEditing = mEditForm != nullptr;
+	QString editDescription = mEditDescription;
+	QString editText = wasEditing ? getEditValue() : QString{};
+	if (wasEditing)
+		endEdit();
+
+	wresize(mTitleWindow, 1, getmaxx(stdscr));
+	wresize(mListViewWindow, qMax(1, getmaxy(stdscr) - 2), qMax(1, getmaxx(stdscr)));
+	// A row whose new content happens to match what curses already has cached for that
+	// screen position (same text, just relaid out) would otherwise be skipped by
+	// doupdate()'s diffing, and only reappear once something (like the selection) changes it.
+	redrawwin(mTitleWindow);
+	redrawwin(mListViewWindow);
+	repaint();
+
+	if (wasEditing)
+		startEdit(editDescription, editText);
+}
+
 QString ObjectsScreen::getEditValue() const
 {
 	if (mEditForm == nullptr)
@@ -261,7 +285,9 @@ void ObjectsScreen::startEdit(const QString &description, const QString &text)
 {
 	if (mEditForm != nullptr)
 		return;
+	mEditDescription = description;
 	int y = getmaxy(stdscr) - 1;
+	mEditRow = y;
 	int x0 = description.size();
 	mEditFields[0] = new_field(1, getmaxx(stdscr) - x0, 0, 0, 0, 0);
 	mEditFields[1] = 0;
@@ -288,8 +314,9 @@ void ObjectsScreen::endEdit()
 	if (mEditForm == nullptr)
 		return;
 	curs_set(0);
-	int y = getmaxy(stdscr) - 1;
-	move(y, 0);
+	// Clear the row it was actually drawn on, not wherever the bottom row is now — stdscr may
+	// have been resized since startEdit() computed mEditRow.
+	move(mEditRow, 0);
 	clrtoeol();
 	unpost_form(mEditForm);
 	delwin(mEditWindow);

@@ -178,6 +178,15 @@ void ListView::redraw()
 	if (mModel->rowCount() > 0)
 		mSelectionIndex = qBound(0, mSelectionIndex, mModel->rowCount() - 1);
 	int h = getListHeight();
+	// Window height may have changed (e.g. terminal resize) since mStartIndex was last set,
+	// so re-clamp it here rather than only when navigating via setSelection().
+	if (h > 0) {
+		if (mSelectionIndex < mStartIndex)
+			mStartIndex = mSelectionIndex;
+		else if (mSelectionIndex >= mStartIndex + h)
+			mStartIndex = mSelectionIndex - h + 1;
+		mStartIndex = qMax(mStartIndex, 0);
+	}
 	wmove(mWindow, 0, 0);
 	int endIndex = qMin(mModel->rowCount(), h + mStartIndex);
 	for (int r = mStartIndex; r < endIndex; ++r)

@@ -18,6 +18,7 @@ public:
 
 	virtual bool handleInput(wint_t c);
 	void repaint();
+	void resize();
 
 	AbstractObjectListModel* getModel() const { return mModel; }
 	ObjectListView* getListView() const { return mListView; }

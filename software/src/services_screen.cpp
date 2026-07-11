@@ -56,3 +56,15 @@ void ServicesScreen::repaint()
 	mListView->redraw();
 	wrefresh(mListViewWindow);
 }
+
+void ServicesScreen::resize()
+{
+	wresize(mTitleWindow, 1, getmaxx(stdscr));
+	wresize(mListViewWindow, qMax(1, getmaxy(stdscr) - 2), qMax(1, getmaxx(stdscr)));
+	// A row whose new content happens to match what curses already has cached for that
+	// screen position (same text, just relaid out) would otherwise be skipped by
+	// doupdate()'s diffing, and only reappear once something (like the selection) changes it.
+	redrawwin(mTitleWindow);
+	redrawwin(mListViewWindow);
+	repaint();
+}

@@ -46,6 +46,7 @@ private slots:
 	void onDBusItemAdded(VeQItem *item);
 	void onStateChanged();
 	void onSearchInput(wint_t c);
+	void onResize();
 
 private:
 	QTimer *mTimer = nullptr;

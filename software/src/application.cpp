@@ -111,6 +111,11 @@ void Application::onCursesTimer()
 		if (status == ERR)
 			break;
 
+		if (c == KEY_RESIZE) {
+			onResize();
+			continue;
+		}
+
 		// First, check if we're in search mode
 		if (mSearchMode) {
 			onSearchInput(c);
@@ -330,6 +335,37 @@ void Application::onSearchInput(wint_t c)
 	// This prevents disrupting the cursor position during typing
 	if (!mSearchMode) {
 		refresh();
+	}
+}
+
+void Application::onResize()
+{
+	// ncurses already updates LINES/COLS/stdscr's size internally (via resizeterm()) before
+	// delivering KEY_RESIZE, so there's no need to touch curses mode here at all — doing so
+	// (e.g. calling endwin()) risks throwing off the alternate-screen enter/exit bookkeeping,
+	// leaving artifacts behind on the real quit at the end of the session.
+
+	if (mObjects != nullptr)
+		mObjects->resize();
+	else if (mServices != nullptr)
+		mServices->resize();
+	else if (mFavorites != nullptr)
+		mFavorites->resize();
+
+	if (mSearchWindow != nullptr) {
+		wresize(mSearchWindow, 1, qMax(1, getmaxx(stdscr)));
+		mvwin(mSearchWindow, qMax(0, getmaxy(stdscr) - 1), 0);
+		wclear(mSearchWindow);
+		if (mSearchMode) {
+			wmove(mSearchWindow, 0, 0);
+			waddstr(mSearchWindow, (char*)"/");
+			waddstr(mSearchWindow, mSearchBuffer.toUtf8().data());
+			// The buffer may no longer fit the (possibly now narrower) window, so clamp
+			// the cursor column instead of moving it out of bounds.
+			int col = qBound(0, 1 + int(mSearchBuffer.length()), getmaxx(mSearchWindow) - 1);
+			wmove(mSearchWindow, 0, col);
+		}
+		wrefresh(mSearchWindow);
 	}
 }
 

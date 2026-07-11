@@ -22,6 +22,7 @@ public:
 
 	virtual bool handleInput(wint_t c);
 	void repaint();
+	void resize();
 
 	// Expose the model directly
 	AbstractObjectListModel* getModel() const { return mModel; }
@@ -46,6 +47,8 @@ private:
 	WINDOW *mEditWindow = nullptr;
 	FIELD *mEditFields[2];
 	FORM *mEditForm = nullptr;
+	QString mEditDescription;
+	int mEditRow = -1;
 	int mPendingCount = 0;
 };
 
