@@ -86,7 +86,8 @@ int Application::init()
 	parser.addOptions({dbusOption, introspectOption, historyOption, dumpOption, watchOption,
 					   textOption, timeoutOption, durationOption, countOption});
 	parser.addPositionalArgument("service", "With --dump/--watch: service(s) to show, e.g. 'system', "
-								 "'battery*' or a full name. Default: all.", "[service]");
+								 "'battery*' or a full name. Default: all; with --watch, the favorites "
+								 "saved in the UI.", "[service]");
 	parser.addPositionalArgument("path", "With --dump/--watch: path(s) to show, e.g. '/Dc/Battery' "
 								 "(includes everything below it) or '*/Soc'. Default: all.", "[path]");
 	// parse() instead of process(), so that a bad option exits with 2 like the other usage errors.
@@ -111,6 +112,11 @@ int Application::init()
 		headlessOptions.showHistory = mShowHistory;
 		headlessOptions.servicePattern = positional.value(0);
 		headlessOptions.pathPattern = positional.value(1);
+		if (headlessOptions.watch && positional.isEmpty()) {
+			headlessOptions.favorites = FavoritesListModel::storedPaths();
+			if (headlessOptions.favorites.isEmpty())
+				return usageError("no favorites saved; add them with 'f' in the UI, or give a service ('*' for all)");
+		}
 		if (!parseSeconds(parser.value(timeoutOption), headlessOptions.timeoutMs))
 			return usageError("--timeout expects a number of seconds");
 		if (parser.isSet(durationOption) &&

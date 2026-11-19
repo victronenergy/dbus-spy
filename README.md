@@ -35,10 +35,13 @@ dbus-spy --dump > /data/before.txt       # snapshot to diff later
 dbus-spy --watch system /Dc/Battery/Soc  # current value, then one line per change, until ctrl-c
 13:04:00.512 com.victronenergy.system /Dc/Battery/Soc 87.3
 13:04:01.233 com.victronenergy.system /Dc/Battery/Soc 87.3 -> 87.4
+dbus-spy --watch                         # the favorites saved in the UI, in their order
+dbus-spy --watch '*'                     # every item of every service
 ```
 
 * `[service]`: `system` matches `com.victronenergy.system`; `battery` matches every
-  `com.victronenergy.battery.*` service. `*` and `?` are wildcards. Default: all services.
+  `com.victronenergy.battery.*` service. `*` and `?` are wildcards. Default: all services; with
+  `--watch`, the favorites saved in the UI, also those under `/History`.
 * `[path]`: `/Dc/Battery` matches that path and everything below it; `*` also matches `/`, so
   `*/Soc` matches `/Dc/Battery/Soc`. History paths are left out unless `-r` is given or the
   pattern starts with `/History`. Default: all paths.

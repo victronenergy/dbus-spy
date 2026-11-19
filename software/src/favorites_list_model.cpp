@@ -9,10 +9,7 @@ FavoritesListModel::FavoritesListModel(VeQItem *root, QObject *parent):
 	mRoot(root),
 	mSettings(new QSettings("ejv", "dbus-spy", this))
 {
-	int size = mSettings->beginReadArray("favorites");
-	for (int index = 0; index < size; ++index) {
-		mSettings->setArrayIndex(index);
-		QString path = mSettings->value("path").toString();
+	for (const QString &path: storedPaths()) {
 		// Workaround: do not create items if the underlying D-Bus service is not present (yet).
 		QString serviceName = path.section('/', 1, 1);
 		VeQItem *service = root->itemGet(serviceName);
@@ -33,8 +30,20 @@ FavoritesListModel::FavoritesListModel(VeQItem *root, QObject *parent):
 		}
 		connectItem(item);
 	}
-	mSettings->endArray();
 	connect(root, SIGNAL(childAdded(VeQItem*)), this, SLOT(onServiceAdded(VeQItem*)));
+}
+
+QStringList FavoritesListModel::storedPaths()
+{
+	QSettings settings("ejv", "dbus-spy");
+	QStringList paths;
+	int size = settings.beginReadArray("favorites");
+	for (int index = 0; index < size; ++index) {
+		settings.setArrayIndex(index);
+		paths.append(settings.value("path").toString());
+	}
+	settings.endArray();
+	return paths;
 }
 
 VeQItem *FavoritesListModel::getItem(int index) const

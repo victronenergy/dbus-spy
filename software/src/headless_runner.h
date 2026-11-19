@@ -19,6 +19,7 @@ struct HeadlessOptions
 	bool showHistory = false;
 	QString servicePattern;
 	QString pathPattern;
+	QStringList favorites; // '/service/path' items to watch instead of the patterns
 	int timeoutMs = 10000;
 	int durationMs = -1; // watch: stop after this long (-1: run until interrupted)
 	int maxCount = -1;   // watch: stop after this many changes (-1: unlimited)
@@ -41,6 +42,7 @@ private:
 	{
 		VeQItem *service = nullptr;
 		QString path;
+		int favorite = -1; // position in the favorites; sorts the initial values (-1: not a favorite)
 		QString last; // last formatted value, used to suppress repeats and to show old -> new
 	};
 

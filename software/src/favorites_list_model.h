@@ -13,6 +13,7 @@ class FavoritesListModel : public AbstractObjectListModel
 	Q_OBJECT
 public:
 	FavoritesListModel(VeQItem *root, QObject *parent = 0);
+	static QStringList storedPaths();
 
 	VeQItem *getItem(int index) const override;
 	QString getItemName(VeQItem *item) const override;
