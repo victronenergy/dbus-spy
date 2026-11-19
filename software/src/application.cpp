@@ -1,9 +1,14 @@
+#include <climits>
+#include <cstdio>
+
+#include <QCommandLineParser>
+
 #include <veutil/qt/ve_qitem.hpp>
 #include <veutil/qt/ve_qitems_dbus.hpp>
 
 #include "application.h"
-#include "arguments.h"
 #include "favorites_list_model.h"
+#include "headless_runner.h"
 #include "object_listview.h"
 #include "object_list_model.h"
 #include "objects_screen.h"
@@ -30,29 +35,102 @@ Application::~Application()
 		delwin(mSearchWindow);
 }
 
+namespace {
+
+int usageError(const QString &message)
+{
+	fprintf(stderr, "dbus-spy: %s\nTry 'dbus-spy --help' for more information.\n",
+			qPrintable(message));
+	return 2;
+}
+
+bool parseSeconds(const QString &s, int &ms)
+{
+	bool ok = false;
+	double seconds = s.toDouble(&ok);
+	// Written so that NaN fails too.
+	if (!(ok && seconds >= 0.001 && seconds <= INT_MAX / 1000.0))
+		return false;
+	ms = int(seconds * 1000);
+	return true;
+}
+
+} // namespace
+
 int Application::init()
 {
-	Arguments args;
-	args.addArg("--dbus", "dbus address (session, system, ...)");
-	args.addArg("-v --version", "Show version");
-	args.addArg("-h --help", "Show help");
-	args.addArg("-i --introspect", "Use introspect to build a tree of the pesky services support GetValue on the root");
-	args.addArg("-r --history", "Show items whose path starts with 'History'.");
-	if (args.contains("h") || args.contains("help")) {
-		args.help();
-		return -1;
-	}
-	if (args.contains("v") || args.contains("version")) {
-		args.version();
-		return -1;
-	}
-	mUseIntrospect = args.contains("i") || args.contains("introspect");
-	mShowHistory = args.contains("r") || args.contains("history");
+	QCommandLineParser parser;
+	parser.setApplicationDescription(
+		"Realtime view of the com.victronenergy services on the D-Bus.\n\n"
+		"Without --dump or --watch, an interactive (curses) UI is started.\n"
+		"With them, items are printed as 'service path value' lines, e.g.:\n"
+		"  dbus-spy --dump system /Dc/Battery\n"
+		"  dbus-spy --watch 'battery*' '*/Soc'");
+	QCommandLineOption helpOption = parser.addHelpOption();
+	QCommandLineOption versionOption = parser.addVersionOption();
+	QCommandLineOption dbusOption("dbus", "D-Bus address: system (default), session or a bus address.",
+								  "address", "system");
+	QCommandLineOption introspectOption({"i", "introspect"},
+		"Use introspect to build a tree of the pesky services that do not support GetValue on the root.");
+	QCommandLineOption historyOption({"r", "history"}, "Show items whose path starts with 'History'.");
+	QCommandLineOption dumpOption("dump", "Print the matching items once and exit.");
+	QCommandLineOption watchOption("watch",
+		"Print the current value of the matching items, then a timestamped line for every "
+		"change, until ctrl-c.");
+	QCommandLineOption textOption("text", "With --dump/--watch: print the formatted text (e.g. '12.3V') "
+								  "instead of the raw value.");
+	QCommandLineOption timeoutOption("timeout", "With --dump/--watch: seconds to wait for the services "
+									 "to load (default: 10).", "seconds", "10");
+	QCommandLineOption durationOption("duration", "With --watch: stop after this many seconds.", "seconds");
+	QCommandLineOption countOption("count", "With --watch: stop after this many changes.", "n");
+	parser.addOptions({dbusOption, introspectOption, historyOption, dumpOption, watchOption,
+					   textOption, timeoutOption, durationOption, countOption});
+	parser.addPositionalArgument("service", "With --dump/--watch: service(s) to show, e.g. 'system', "
+								 "'battery*' or a full name. Default: all.", "[service]");
+	parser.addPositionalArgument("path", "With --dump/--watch: path(s) to show, e.g. '/Dc/Battery' "
+								 "(includes everything below it) or '*/Soc'. Default: all.", "[path]");
+	// parse() instead of process(), so that a bad option exits with 2 like the other usage errors.
+	if (!parser.parse(arguments()))
+		return usageError(parser.errorText());
+	if (parser.isSet(helpOption) || parser.isSet("help-all"))
+		parser.showHelp();
+	if (parser.isSet(versionOption))
+		parser.showVersion();
 
-	QString dbusAddress = args.contains("dbus") ? args.value("dbus") : "system";
+	mUseIntrospect = parser.isSet(introspectOption);
+	mShowHistory = parser.isSet(historyOption);
+	bool headless = parser.isSet(dumpOption) || parser.isSet(watchOption);
+
+	HeadlessOptions headlessOptions;
+	if (headless) {
+		const QStringList positional = parser.positionalArguments();
+		if (positional.size() > 2)
+			return usageError("too many arguments, expected at most [service] [path]");
+		headlessOptions.watch = parser.isSet(watchOption);
+		headlessOptions.text = parser.isSet(textOption);
+		headlessOptions.showHistory = mShowHistory;
+		headlessOptions.servicePattern = positional.value(0);
+		headlessOptions.pathPattern = positional.value(1);
+		if (!parseSeconds(parser.value(timeoutOption), headlessOptions.timeoutMs))
+			return usageError("--timeout expects a number of seconds");
+		if (parser.isSet(durationOption) &&
+			!parseSeconds(parser.value(durationOption), headlessOptions.durationMs))
+			return usageError("--duration expects a number of seconds");
+		if (parser.isSet(countOption)) {
+			bool ok = false;
+			headlessOptions.maxCount = parser.value(countOption).toInt(&ok);
+			if (!ok || headlessOptions.maxCount <= 0)
+				return usageError("--count expects a positive number");
+		}
+	}
+
+	QString dbusAddress = parser.value(dbusOption);
 
 	auto producer = new VeQItemDbusProducer{VeQItems::getRoot(), "dbus", true, true, this};
-	producer->open(dbusAddress);
+	if (!producer->open(dbusAddress)) {
+		fprintf(stderr, "dbus-spy: could not connect to D-Bus '%s'\n", qPrintable(dbusAddress));
+		return 2;
+	}
 	mRoot = producer->services();
 
 	for (int i=0;;++i) {
@@ -63,6 +141,14 @@ int Application::init()
 				this, SLOT(onStateChanged()));
 	}
 	connect(mRoot, SIGNAL(childAdded(VeQItem*)), this, SLOT(onDBusItemAdded(VeQItem*)));
+
+	if (headless) {
+		// No curses and no favorites model: the latter creates the stored favorite items, which
+		// would show up in the output even when they do not exist on the bus.
+		auto runner = new HeadlessRunner{mRoot, producer, headlessOptions, this};
+		connect(runner, &HeadlessRunner::finished, &QCoreApplication::exit);
+		return 0;
+	}
 
 	mFavoritesModel = new FavoritesListModel{mRoot, this};
 	mSearchManager = new SearchManager(this);

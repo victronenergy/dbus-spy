@@ -25,8 +25,8 @@ equals(QT_MAJOR_VERSION, 6): QMAKE_CXXFLAGS += -std=c++17
 
 SOURCES += \
     src/application.cpp \
-    src/arguments.cpp \
     src/favorites_list_model.cpp \
+    src/headless_runner.cpp \
     src/list_view.cpp \
     src/main.cpp \
     src/object_list_model.cpp \
@@ -35,12 +35,13 @@ SOURCES += \
     src/services_screen.cpp \
     src/signal_handler.cpp \
     src/search_manager.cpp \
+    src/value_format.cpp \
 
 HEADERS += \
     src/abstract_object_list_model.h \
     src/application.h \
-    src/arguments.h \
     src/favorites_list_model.h \
+    src/headless_runner.h \
     src/list_view.h \
     src/object_list_model.h \
     src/object_listview.h \
@@ -48,6 +49,7 @@ HEADERS += \
     src/services_screen.h \
     src/signal_handler.h \
     src/search_manager.h \
+    src/value_format.h \
 
 DISTFILES += \
     ../README.md
