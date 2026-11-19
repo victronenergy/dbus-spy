@@ -1,11 +1,10 @@
-#include <QDBusVariant>
-
 #include <veutil/qt/ve_qitem.hpp>
 
 #include "favorites_list_model.h"
 #include "object_list_model.h"
 #include "object_listview.h"
 #include "list_view.h"
+#include "value_format.h"
 
 ObjectListView::ObjectListView(AbstractObjectListModel *model, WINDOW *w, QObject *parent):
 	ListView(w, parent)
@@ -59,7 +58,7 @@ void ObjectListView::drawRow(int index, int width) const
 	QString text;
 	if (item->isLeaf()) {
 		if (item->getState() != VeQItem::Offline)
-			text = mShowText ? item->getText() : convertVariant(item->getValue());
+			text = mShowText ? item->getText() : formatVariant(item->getValue());
 	} else {
 		VeQItem *productName = item->itemGetOrCreate("ProductName");
 		VeQItem *customName = item->itemGetOrCreate("CustomName");
@@ -146,52 +145,4 @@ void ObjectListView::registerItem(VeQItem *item) const
 	connect(item, SIGNAL(stateChanged(VeQItem::State)), this, SLOT(onStateChanged()));
 	connect(item, SIGNAL(destroyed()), this, SLOT(onDestroyed()));
 	mItems.append(item);
-}
-
-QString ObjectListView::convertVariant(const QVariant &value)
-{
-	// Workaround: the standard demarshall function does not convert QBusVariant objects to
-	// QVariants. This causes problems in com.victronenergy.system/pvinverterids.
-	if (value.canConvert<QDBusVariant>())
-	{
-		QDBusVariant v = qvariant_cast<QDBusVariant>(value);
-		return convertVariant(v.variant());
-	}
-	switch (value.typeId()) {
-	case QMetaType::UChar:
-		return QString::number(value.toUInt());
-	case QMetaType::Double:
-		return QString::number(value.toDouble());
-	case QMetaType::UnknownType:
-		return "-";
-	case QMetaType::QStringList:
-		return "[" + value.toStringList().join(",") + "]";
-	case QMetaType::QVariantList:
-	{
-		QList<QVariant> list = value.toList();
-		QString r = "[";
-		for (QVariant &v: list)
-		{
-			r.append(convertVariant(v));
-			r.append(',');
-		}
-		if (r.size() > 1)
-			r.chop(1);
-		r.append("]");
-		return r;
-	}
-	case QMetaType::QVariantMap:
-	{
-		QMap<QString, QVariant> map = value.toMap();
-		QString r = "{";
-		for (auto it = map.begin(); it != map.end(); ++it)
-			r.append(QString("'%1': %2,").arg(it.key(), convertVariant(it.value())));
-		if (r.size() > 1)
-			r.chop(1);
-		r.append("}");
-		return r;
-	}
-	default:
-		return value.toString();
-	}
 }

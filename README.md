@@ -13,11 +13,45 @@ the current value. The values will be updated in realtime. It is also possible t
 History properties are hidden by default and can be enabled with a command line argument.
 
 ## Command line options
-* `--dbus`: dbus address (session, system, ...)
+* `--dbus <address>`: D-Bus address: `system` (default), `session` or a bus address
 * `-h` or `--help`: Show help
-* `-i` or `--introspect`: Use introspect to build a tree of the pesky services support GetValue on the root
+* `-i` or `--introspect`: Use introspect to build a tree of the pesky services that do not support GetValue on the root
 * `-r` or `--history`: Show items whose path starts with 'History'.
 * `-v` or `--version`: Show version
+* `--dump`, `--watch`: non-interactive mode, see below.
+
+## Non-interactive mode (--dump / --watch)
+
+With `--dump` or `--watch`, no curses UI is started. Instead, items are printed as plain text
+lines of the form `service path value`, which is handy for support logs, scripts, and comparing
+a system before and after a change.
+
+```
+dbus-spy --dump                          # every item of every service, then exit
+dbus-spy --dump system /Dc/Battery       # one service, one subtree
+dbus-spy --dump 'battery*' '*/Soc'       # glob patterns
+dbus-spy --dump > /data/before.txt       # snapshot to diff later
+
+dbus-spy --watch system /Dc/Battery/Soc  # current value, then one line per change, until ctrl-c
+13:04:00.512 com.victronenergy.system /Dc/Battery/Soc 87.3
+13:04:01.233 com.victronenergy.system /Dc/Battery/Soc 87.3 -> 87.4
+dbus-spy --watch                         # the favorites saved in the UI, in their order
+dbus-spy --watch '*'                     # every item of every service
+```
+
+* `[service]`: `system` matches `com.victronenergy.system`; `battery` matches every
+  `com.victronenergy.battery.*` service. `*` and `?` are wildcards. Default: all services; with
+  `--watch`, the favorites saved in the UI, also those under `/History`.
+* `[path]`: `/Dc/Battery` matches that path and everything below it; `*` also matches `/`, so
+  `*/Soc` matches `/Dc/Battery/Soc`. History paths are left out unless `-r` is given or the
+  pattern starts with `/History`. Default: all paths.
+* `--text`: print the formatted text (`12.60V`) instead of the raw value (`12.6`).
+* `--timeout <seconds>`: how long to wait for the services to load before printing (default 10).
+  Services that are still loading after that are reported on stderr.
+* `--duration <seconds>`, `--count <n>`: stop watching after this long / this many changes.
+
+In `--watch`, a value that disappears (e.g. the service stops) is shown as `-`. `--dump` exits
+with status 1 if nothing matched, and 2 on an error such as a bad option.
 
 ## Keyboard shortcuts
 
